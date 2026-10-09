@@ -35,6 +35,7 @@
       "POST /api/studio-set/rooms",
       "POST /api/studio-set/rooms/:id/generate",
       "POST /api/studio-set/artists/import",
+      "POST /api/studio-set/artists/:id/generate",
       "POST /api/studio-set/imagery",
       "GET /api/studio-set/:id/readiness",
       "POST /api/studio-set/:id/apply-to-director"

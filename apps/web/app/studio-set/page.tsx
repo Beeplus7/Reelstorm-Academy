@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import clsx from "clsx";
 import { api } from "@/lib/api";
 
@@ -75,7 +76,48 @@ function plateOk(v?: string) {
   return Boolean(v && v !== "pending" && v.trim());
 }
 
+function plateSrc(v?: string) {
+  if (!v || v === "pending") return null;
+  const bare = v.split("#")[0];
+  if (bare.startsWith("http://") || bare.startsWith("https://") || bare.startsWith("data:")) {
+    return bare;
+  }
+  return null;
+}
+
+function PlateCell({
+  angle,
+  value,
+  portrait,
+}: {
+  angle: string;
+  value?: string;
+  portrait?: boolean;
+}) {
+  const ok = plateOk(value);
+  const src = plateSrc(value);
+  return (
+    <div
+      className={clsx(
+        "rounded-rs border overflow-hidden relative grid place-items-center mono text-[9px]",
+        portrait ? "aspect-[3/4]" : "aspect-video",
+        ok ? "border-cyan/40 bg-cyan/10 text-cyan" : "border-white/10 bg-void text-white/30",
+      )}
+    >
+      {src ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={src} alt={angle} className="absolute inset-0 w-full h-full object-cover opacity-80" />
+      ) : null}
+      <div className={clsx("relative z-10 text-center px-1", src && "bg-black/55 rounded px-1.5 py-0.5")}>
+        {angle}
+        <span className="block text-[8px] mt-0.5 opacity-70">{ok ? "PASS" : "MISSING"}</span>
+      </div>
+    </div>
+  );
+}
+
 export default function StudioSetPage() {
+  const searchParams = useSearchParams();
   const [tab, setTab] = useState<(typeof TABS)[number]["id"]>("room");
   const [projectId, setProjectId] = useState("");
   const [payload, setPayload] = useState<StudioSetPayload | null>(null);
@@ -111,6 +153,11 @@ export default function StudioSetPage() {
   useEffect(() => {
     void loadPacks();
   }, [loadPacks]);
+
+  useEffect(() => {
+    const fromQuery = searchParams.get("projectId")?.trim();
+    if (fromQuery) setProjectId(fromQuery);
+  }, [searchParams]);
 
   async function createOrLoad(seed?: boolean) {
     if (!projectId.trim()) return setMsg("Project ID required");
@@ -166,27 +213,57 @@ export default function StudioSetPage() {
     }
   }
 
+  async function generateArtistPlates(artistId: string, opts?: { quiet?: boolean }) {
+    const res = await api<StudioSetPayload>(`/api/studio-set/artists/${artistId}/generate`, {
+      method: "POST",
+      body: JSON.stringify({}),
+    });
+    setPayload({ set: res.set, readiness: res.readiness });
+    if (!opts?.quiet) setMsg("Artist plates generated");
+    return res;
+  }
+
   async function importArtist() {
     if (!set?.id || !artistName.trim()) return setMsg("Studio Set + artist name required");
+    const name = artistName.trim();
+    const hadUrl = Boolean(artistUrl.trim());
     setBusy(true);
     try {
       const res = await api<StudioSetPayload>(`/api/studio-set/artists/import`, {
         method: "POST",
         body: JSON.stringify({
           studioSetId: set.id,
-          name: artistName.trim(),
+          name,
           role: artistRole,
-          source: artistUrl ? artistSource : "manual",
-          url: artistUrl || undefined,
-          plates: artistUrl
+          source: hadUrl ? artistSource : "manual",
+          url: hadUrl ? artistUrl.trim() : undefined,
+          plates: hadUrl
             ? undefined
             : { front: "pending", left: "pending", right: "pending", threeQuarter: "pending" },
         }),
       });
       setPayload({ set: res.set, readiness: res.readiness });
+      const created = res.set.artists.find((a) => a.name === name && !a.locked) ||
+        res.set.artists.filter((a) => a.name === name).at(-1);
       setArtistName("");
       setArtistUrl("");
-      setMsg("Artist imported into Studio Set");
+      if (created && !hadUrl) {
+        await generateArtistPlates(created.id, { quiet: true });
+        setMsg("Artist imported — plates generated");
+      } else {
+        setMsg("Artist imported into Studio Set");
+      }
+    } catch (e) {
+      setMsg((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function onGenerateArtist(artistId: string) {
+    setBusy(true);
+    try {
+      await generateArtistPlates(artistId);
     } catch (e) {
       setMsg((e as Error).message);
     } finally {
@@ -202,15 +279,19 @@ export default function StudioSetPage() {
         method: "POST",
         body: JSON.stringify({
           studioSetId: set.id,
-          name: "Custom Imagery",
-          stylePreset: "Drama · Prompt Custom",
+          packId: set.imagery[0]?.id,
+          name: set.imagery[0]?.name || "Custom Imagery",
+          stylePreset: set.imagery[0]?.stylePreset || "Drama · Prompt Custom",
           prompt: imageryPrompt,
           customizedPrompt: imageryPrompt,
           sceneSetId: set.rooms[0]?.id,
+          refreshRooms: true,
         }),
       });
       setPayload({ set: res.set, readiness: res.readiness });
-      setMsg("Imagery pack saved — scene plates refreshed");
+      if (res.set.rooms[0]?.promptDna) setRoomPrompt(res.set.rooms[0].promptDna);
+      setMsg("Imagery saved — all room plates refreshed from prompt");
+      setTab("room");
     } catch (e) {
       setMsg((e as Error).message);
     } finally {
@@ -396,21 +477,9 @@ export default function StudioSetPage() {
                   </button>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
-                  {(room.requiredAngles || []).map((angle) => {
-                    const ok = plateOk(room.platesJson?.[angle]);
-                    return (
-                      <div
-                        key={angle}
-                        className={clsx(
-                          "aspect-video rounded-rs border grid place-items-center mono text-[9px]",
-                          ok ? "border-cyan/40 bg-cyan/10 text-cyan" : "border-white/10 bg-void text-white/30",
-                        )}
-                      >
-                        {angle}
-                        <span className="block text-[8px] mt-1 opacity-70">{ok ? "PASS" : "MISSING"}</span>
-                      </div>
-                    );
-                  })}
+                  {(room.requiredAngles || []).map((angle) => (
+                    <PlateCell key={angle} angle={angle} value={room.platesJson?.[angle]} />
+                  ))}
                 </div>
               </div>
             ))}
@@ -462,27 +531,34 @@ export default function StudioSetPage() {
             </button>
             <div className="grid md:grid-cols-2 gap-3">
               {(set?.artists || []).map((a) => (
-                <div key={a.id} className="rounded-rs border border-violet/25 bg-violet/5 p-4">
-                  <div className="font-bold">{a.name}</div>
-                  <div className="mono text-[9px] text-violet-soft mt-1">
-                    {a.role} · {a.importSource}
-                    {a.soulId ? ` · soul ${a.soulId.slice(0, 8)}` : ""}
+                <div key={a.id} className="rounded-rs border border-violet/25 bg-violet/5 p-4 space-y-3">
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div>
+                      <div className="font-bold">{a.name}</div>
+                      <div className="mono text-[9px] text-violet-soft mt-1">
+                        {a.role} · {a.importSource}
+                        {a.soulId ? ` · soul ${a.soulId.slice(0, 8)}` : ""}
+                        {a.locked ? " · locked" : ""}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => void onGenerateArtist(a.id)}
+                      className="h-9 px-3 rounded-rs bg-violet text-white text-xs font-bold disabled:opacity-40"
+                    >
+                      Generate plates
+                    </button>
                   </div>
-                  <div className="mt-3 grid grid-cols-4 gap-1.5">
-                    {(a.requiredAngles || ["front", "left", "right", "threeQuarter"]).map((angle) => {
-                      const ok = plateOk(a.platesJson?.[angle]);
-                      return (
-                        <div
-                          key={angle}
-                          className={clsx(
-                            "aspect-[3/4] rounded-rs border grid place-items-center mono text-[8px]",
-                            ok ? "border-cyan/40 text-cyan bg-cyan/10" : "border-white/10 text-white/30",
-                          )}
-                        >
-                          {angle}
-                        </div>
-                      );
-                    })}
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {(a.requiredAngles || ["front", "left", "right", "threeQuarter"]).map((angle) => (
+                      <PlateCell
+                        key={angle}
+                        angle={angle}
+                        value={a.platesJson?.[angle]}
+                        portrait
+                      />
+                    ))}
                   </div>
                 </div>
               ))}
@@ -497,6 +573,10 @@ export default function StudioSetPage() {
             IMAGERY STUDIO · STYLE + PROMPT BACKGROUNDS
           </div>
           <div className="p-5 space-y-4">
+            <p className="text-xs text-white/45 max-w-2xl">
+              Customize the background DNA. Save upserts the imagery pack and regenerates every Room angle
+              so plates match the drama — then jump back to Room to inspect.
+            </p>
             <label className="block">
               <span className="mono text-[10px] text-white/40">CUSTOMIZE BACKGROUND PROMPT</span>
               <textarea
@@ -513,7 +593,7 @@ export default function StudioSetPage() {
               onClick={() => void saveImagery()}
               className="h-10 px-4 rounded-rs bg-orange text-black text-sm font-bold disabled:opacity-40"
             >
-              Save imagery + refresh plates
+              Save imagery + refresh all room plates
             </button>
             <div className="space-y-2">
               {(set?.imagery || []).map((pack) => (

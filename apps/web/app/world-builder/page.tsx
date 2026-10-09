@@ -60,7 +60,7 @@ export default function WorldBuilderPage() {
           </p>
         </div>
         <Link
-          href={projectId ? `/studio-set` : "/studio-set"}
+          href={projectId ? `/studio-set?projectId=${encodeURIComponent(projectId)}` : "/studio-set"}
           className="h-10 px-4 rounded-rs bg-cyan text-black text-sm font-bold grid place-items-center shrink-0"
         >
           Open Studio Set

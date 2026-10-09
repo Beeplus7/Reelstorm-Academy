@@ -80,24 +80,62 @@ async function refreshCompleteness(studioSetId: string) {
 /** Soft-launch / MVP: store prompt DNA as plate keys when no real image gen */
 function mockPlateKey(kind: string, id: string, angle: string, prompt: string): string {
   const hash = createHash("sha1").update(`${kind}:${id}:${angle}:${prompt}`).digest("hex").slice(0, 12);
-  return `studio-set/${kind}/${id}/${angle}_${hash}.prompt`;
+  return `studio-set/${kind}/${id}/${angle}_${hash}.svg`;
+}
+
+function escapeXml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
 async function tryUploadPlaceholder(
   key: string,
   label: string,
+  promptSnippet?: string,
 ): Promise<string> {
   try {
+    const sub = escapeXml((promptSnippet || "").slice(0, 90));
+    const title = escapeXml(label.slice(0, 60));
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720">
-      <rect width="100%" height="100%" fill="#0A0A0A"/>
-      <text x="50%" y="48%" fill="#00D9FF" font-family="sans-serif" font-size="28" text-anchor="middle">${label}</text>
-      <text x="50%" y="56%" fill="#7C3AED" font-family="sans-serif" font-size="16" text-anchor="middle">REELSTORM Studio Set plate</text>
+      <defs>
+        <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#0A0A0A"/>
+          <stop offset="100%" stop-color="#12121A"/>
+        </linearGradient>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#g)"/>
+      <rect x="48" y="48" width="1184" height="624" fill="none" stroke="#00D9FF" stroke-opacity="0.25" stroke-width="2"/>
+      <text x="50%" y="44%" fill="#00D9FF" font-family="ui-monospace,monospace" font-size="32" text-anchor="middle">${title}</text>
+      <text x="50%" y="52%" fill="#7C3AED" font-family="sans-serif" font-size="18" text-anchor="middle">REELSTORM Studio Set plate</text>
+      ${sub ? `<text x="50%" y="62%" fill="#FFFFFF" fill-opacity="0.45" font-family="sans-serif" font-size="14" text-anchor="middle">${sub}</text>` : ""}
     </svg>`;
     await uploadBuffer(key, Buffer.from(svg), "image/svg+xml");
     return publicUrl(key) || key;
   } catch {
     return key;
   }
+}
+
+async function regenerateRoomPlates(
+  roomId: string,
+  prompt: string,
+  angles?: string[],
+) {
+  const room = await prisma.sceneSet.findUnique({ where: { id: roomId } });
+  if (!room) return null;
+  const list = (angles || room.requiredAngles || CORE_SET_ANGLES) as string[];
+  const plates = { ...asPlates(room.platesJson) };
+  for (const angle of list) {
+    const key = mockPlateKey("room", room.id, angle, `${prompt}:${angle}`);
+    plates[angle] = await tryUploadPlaceholder(key, `${room.name} · ${angle}`, prompt);
+  }
+  return prisma.sceneSet.update({
+    where: { id: roomId },
+    data: { platesJson: plates, promptDna: prompt, locked: true },
+  });
 }
 
 export async function studioSetRoutes(app: FastifyInstance) {
@@ -261,21 +299,7 @@ export async function studioSetRoutes(app: FastifyInstance) {
     const prompt = (body.prompt || room.promptDna || "").trim();
     if (!prompt) return reply.code(400).send({ error: "prompt required" });
 
-    const angles = (body.angles || room.requiredAngles || CORE_SET_ANGLES) as string[];
-    const plates = { ...asPlates(room.platesJson) };
-    for (const angle of angles) {
-      const key = mockPlateKey("room", id, angle, `${prompt}:${angle}`);
-      plates[angle] = await tryUploadPlaceholder(key, `${room.name} · ${angle}`);
-    }
-
-    const updated = await prisma.sceneSet.update({
-      where: { id },
-      data: {
-        platesJson: plates,
-        promptDna: prompt,
-        locked: true,
-      },
-    });
+    const updated = await regenerateRoomPlates(id, prompt, body.angles);
     const refreshed = await refreshCompleteness(room.studioSetId);
     return reply.send({ room: updated, ...refreshed });
   });
@@ -413,9 +437,90 @@ export async function studioSetRoutes(app: FastifyInstance) {
     return reply.send({ artist, ...refreshed });
   });
 
+  /** Generate / refresh artist multi-angle plates (soft-launch placeholders or URL-stamped) */
+  app.post("/api/studio-set/artists/:id/generate", async (req, reply) => {
+    const { id } = req.params as { id: string };
+    const body = (req.body || {}) as {
+      prompt?: string;
+      angles?: string[];
+      url?: string;
+    };
+    const artist = await prisma.artistProfile.findUnique({ where: { id } });
+    if (!artist) return reply.code(404).send({ error: "Artist not found" });
+    const parent = await prisma.studioSet.findUnique({
+      where: { id: artist.studioSetId },
+      select: { projectId: true },
+    });
+    if (!parent) return reply.code(404).send({ error: "Studio Set not found" });
+
+    const dna = [
+      body.prompt,
+      artist.wardrobeNotes,
+      artist.bodyNotes,
+      `${artist.name}, ${artist.role}, cinematic character plate, film still`,
+    ]
+      .filter(Boolean)
+      .join(" · ");
+    const sourceUrl = (body.url || artist.importUrl || "").trim();
+    const angles = (body.angles || artist.requiredAngles || CORE_ARTIST_ANGLES) as string[];
+    const plates = { ...asPlates(artist.platesJson) };
+
+    for (const angle of angles) {
+      if (sourceUrl && (sourceUrl.startsWith("http://") || sourceUrl.startsWith("https://"))) {
+        const key = mockPlateKey("artist", id, angle, sourceUrl);
+        plates[angle] = `${sourceUrl}#${angle}`;
+        await prisma.asset.create({
+          data: {
+            projectId: parent.projectId,
+            type: "artistPlate",
+            key,
+            url: sourceUrl,
+            labels: [artist.name, angle, "generate"],
+            meta: { importUrl: sourceUrl, angle, artist: artist.name, prompt: dna },
+          },
+        });
+      } else {
+        const key = mockPlateKey("artist", id, angle, `${dna}:${angle}`);
+        plates[angle] = await tryUploadPlaceholder(
+          key,
+          `${artist.name} · ${angle}`,
+          dna,
+        );
+      }
+    }
+
+    const updated = await prisma.artistProfile.update({
+      where: { id },
+      data: {
+        platesJson: plates,
+        locked: CORE_ARTIST_ANGLES.every((a) => Boolean(plates[a])),
+        importUrl: sourceUrl || artist.importUrl,
+      },
+    });
+
+    if (artist.soulId) {
+      const soulAngles = soulAnglesFromPlateMap(plates);
+      await prisma.soulIdentity.update({
+        where: { id: artist.soulId },
+        data: {
+          frontKey: soulAngles.front,
+          leftKey: soulAngles.left,
+          rightKey: soulAngles.right,
+          threeQKey: soulAngles.threeQuarter,
+          locked: Boolean(soulAngles.front),
+        },
+      });
+    }
+
+    const refreshed = await refreshCompleteness(artist.studioSetId);
+    return reply.send({ artist: updated, ...refreshed });
+  });
+
+  /** Upsert imagery pack and refresh bound room plates (or all rooms) from customized prompt */
   app.post("/api/studio-set/imagery", async (req, reply) => {
     const body = (req.body || {}) as {
       studioSetId?: string;
+      packId?: string;
       name?: string;
       stylePreset?: string;
       aesthetic?: string;
@@ -424,44 +529,68 @@ export async function studioSetRoutes(app: FastifyInstance) {
       sceneSetId?: string;
       lut?: string;
       mood?: string[];
+      refreshRooms?: boolean;
     };
     if (!body.studioSetId || !body.prompt) {
       return reply.code(400).send({ error: "studioSetId and prompt required" });
     }
-    const pack = await prisma.imageryPack.create({
-      data: {
-        studioSetId: body.studioSetId,
-        name: body.name || "Imagery Pack",
-        stylePreset: body.stylePreset || "STORM Signature",
-        aesthetic: body.aesthetic,
-        prompt: body.prompt,
-        customizedPrompt: body.customizedPrompt || body.prompt,
-        sceneSetId: body.sceneSetId,
-        lut: body.lut,
-        mood: body.mood || [],
-        locked: true,
-      },
-    });
 
-    // If bound to a scene set, regenerate plates with customized prompt
-    if (body.sceneSetId) {
-      const room = await prisma.sceneSet.findUnique({ where: { id: body.sceneSetId } });
-      if (room) {
-        const prompt = body.customizedPrompt || body.prompt;
-        const plates = { ...asPlates(room.platesJson) };
-        for (const angle of room.requiredAngles) {
-          const key = mockPlateKey("room", room.id, angle, `${prompt}:${angle}`);
-          plates[angle] = await tryUploadPlaceholder(key, `${room.name} · ${angle}`);
-        }
-        await prisma.sceneSet.update({
-          where: { id: room.id },
-          data: { platesJson: plates, promptDna: prompt, locked: true },
+    const set = await prisma.studioSet.findUnique({
+      where: { id: body.studioSetId },
+      include: { rooms: true, imagery: true },
+    });
+    if (!set) return reply.code(404).send({ error: "Studio Set not found" });
+
+    const prompt = (body.customizedPrompt || body.prompt).trim();
+    const sceneSetId = body.sceneSetId || set.rooms[0]?.id || null;
+    const existing =
+      (body.packId
+        ? set.imagery.find((i) => i.id === body.packId)
+        : undefined) ||
+      set.imagery.find((i) => i.sceneSetId === sceneSetId) ||
+      set.imagery[0];
+
+    const pack = existing
+      ? await prisma.imageryPack.update({
+          where: { id: existing.id },
+          data: {
+            name: body.name || existing.name,
+            stylePreset: body.stylePreset || existing.stylePreset,
+            aesthetic: body.aesthetic ?? existing.aesthetic,
+            prompt: body.prompt,
+            customizedPrompt: prompt,
+            sceneSetId,
+            lut: body.lut ?? existing.lut,
+            mood: body.mood || existing.mood,
+            locked: true,
+          },
+        })
+      : await prisma.imageryPack.create({
+          data: {
+            studioSetId: body.studioSetId,
+            name: body.name || "Imagery Pack",
+            stylePreset: body.stylePreset || "STORM Signature",
+            aesthetic: body.aesthetic,
+            prompt: body.prompt,
+            customizedPrompt: prompt,
+            sceneSetId,
+            lut: body.lut,
+            mood: body.mood || [],
+            locked: true,
+          },
         });
+
+    const refreshAll = body.refreshRooms !== false;
+    if (refreshAll && set.rooms.length) {
+      for (const room of set.rooms) {
+        await regenerateRoomPlates(room.id, prompt);
       }
+    } else if (sceneSetId) {
+      await regenerateRoomPlates(sceneSetId, prompt);
     }
 
     const refreshed = await refreshCompleteness(body.studioSetId);
-    return reply.code(201).send({ pack, ...refreshed });
+    return reply.code(existing ? 200 : 201).send({ pack, ...refreshed });
   });
 
   /** Bind Studio Set into Soul + RoomPlate + Blueprint meta for Director */
@@ -624,7 +753,11 @@ async function seedCourtroomPack(studioSetId: string, projectId: string) {
   const plates: PlateMap = {};
   for (const spec of pack.angles) {
     const key = mockPlateKey("room", studioSetId, spec.angle, spec.prompt);
-    plates[spec.angle] = await tryUploadPlaceholder(key, `${pack.name} · ${spec.label}`);
+    plates[spec.angle] = await tryUploadPlaceholder(
+      key,
+      `${pack.name} · ${spec.label}`,
+      spec.prompt,
+    );
   }
 
   const room = await prisma.sceneSet.create({
@@ -661,7 +794,11 @@ async function seedCourtroomPack(studioSetId: string, projectId: string) {
     const artistPlates: PlateMap = {};
     for (const angle of CORE_ARTIST_ANGLES) {
       const key = mockPlateKey("artist", `${studioSetId}_${cast.role}`, angle, cast.name);
-      artistPlates[angle] = await tryUploadPlaceholder(key, `${cast.name} · ${angle}`);
+      artistPlates[angle] = await tryUploadPlaceholder(
+        key,
+        `${cast.name} · ${angle}`,
+        `${cast.name}, ${cast.role}, courtroom drama cast plate`,
+      );
     }
     const soul = await prisma.soulIdentity.create({
       data: {
