@@ -8,11 +8,12 @@
   "artifact": "artifacts/project-scorecard.html",
   "api_probe": "GET /api/readiness \u2192 production1k",
   "deploy_status": {
-    "github_main": "pending_push",
-    "vps_app_reelstorm_uk": "pending_redeploy",
+    "github_main": "pushed",
+    "vps_app_reelstorm_uk": "deployed",
     "studio_set_live": "ok",
     "studio_set_code": "production_test_ready",
-    "world_builder_live": "ok"
+    "world_builder_live": "ok",
+    "git_sha_vps": "c49ccbd"
   },
   "architecture": {
     "model": "dual_saver",
