@@ -1,9 +1,20 @@
 # REELSTORM ACADEMY OS — Production Build Scorecard
 
-**Version:** v1.6 (Full Studio Set layer)  
+**Version:** v1.6.1 (Studio Set soft-launch harden)  
 **Live UI:** `/scorecard` · `/studio-set`  
 **Artifact view:** [`artifacts/project-scorecard.html`](artifacts/project-scorecard.html) — full scorecard + architecture + system tiers (A/B/C/infra)  
-**API probe:** `GET /api/readiness` → `production1k`
+**API probe:** `GET /api/readiness` → `production1k`  
+**Git:** `Beeplus7/Reelstorm-Academy` `main` @ `11f52de`  
+**Live deploy:** **LIVE** on `app.reelstorm.uk` @ `11f52de` (VPS deploy + nginx `/api/` proxy restored)
+
+## Gaps closed in v1.6.1
+
+| Gap | Fix |
+|-----|-----|
+| Artist plates stuck on `pending` | `POST /api/studio-set/artists/:id/generate` + UI Generate + auto-gen on manual import |
+| Imagery created duplicate packs | Imagery upsert + refresh **all** room plates from customized prompt |
+| No plate preview in UI | `PlateCell` thumbs for Room/Artist when URL exists |
+| Weak World Builder handoff | `/studio-set?projectId=` deep-link |
 
 ## Gaps closed in v1.6
 
@@ -14,6 +25,10 @@
 | No artist import from URL | `POST /api/studio-set/artists/import` (image/video) |
 | Weak Director feed | Apply to Director → Soul + RoomPlate + Blueprint.worldBible.studioSet |
 | No camera coach for amateurs | STORM Guide layers on `/studio-set` |
+
+## Soft-launch note (Studio Set)
+
+Plates are SVG / URL-stamped placeholders until real still gen (RunPod / Comfy). Flow-test ready **after deploy**; not ship-ready imagery.
 
 ## Gaps closed in v1.5
 

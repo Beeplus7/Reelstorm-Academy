@@ -412,7 +412,7 @@
 <body>
   <div class="wrap">
     <header class="hero">
-      <div class="eyebrow mono"><i></i> Artifact view · v1.5 · production 1k</div>
+      <div class="eyebrow mono"><i></i> Artifact view · v1.6.1 · Studio Set soft-launch · production 1k</div>
       <h1 class="brand display">REELSTORM</h1>
       <p class="lede">
         Full project scorecard with STORM OS architecture and system-tier model
@@ -467,7 +467,7 @@
             <div class="mono" style="color:var(--cyan);font-size:.58rem;margin-bottom:.25rem">Client surface</div>
             <div class="size">0 MB</div>
             <strong>Web</strong>
-            <div class="caption">app.reelstorm.uk · /generate · /template-forge · /scorecard</div>
+            <div class="caption">app.reelstorm.uk · /generate · /studio-set · /template-forge · /scorecard</div>
           </div>
           <div class="client-card">
             <div class="mono" style="color:var(--orange);font-size:.58rem;margin-bottom:.25rem">Client surface</div>
@@ -494,8 +494,8 @@
           <div class="arch-title">Before Storyboard — multi-angle sets + cast + prompt imagery</div>
           <div class="flow">
             <div class="node"><strong>Studio Room</strong><span>Courtroom pack · establishing→close plates</span></div>
-            <div class="node"><strong>Artist Studio</strong><span>Import from image/video URL · Soul angles</span></div>
-            <div class="node"><strong>Imagery Studio</strong><span>Style packs · customize background prompt</span></div>
+            <div class="node"><strong>Artist Studio</strong><span>URL import · generate plates · Soul angles</span></div>
+            <div class="node"><strong>Imagery Studio</strong><span>Upsert prompt DNA · refresh all room plates</span></div>
             <div class="node"><strong>AI Guide</strong><span>Camera tour · framing coach</span></div>
             <div class="node"><strong>Apply gate</strong><span>Readiness % → Blueprint + RoomPlate + Soul</span></div>
           </div>
@@ -548,7 +548,7 @@
         <div class="pipe-step"><div class="n">7</div><strong>MERGE STUDIO</strong></div>
       </div>
       <p class="caption" style="margin-top:.75rem">
-        Full Studio Set locks Room + Artist + Imagery (Courtroom multi-angle + URL import + prompt backgrounds) before Director generate.
+        Full Studio Set locks Room + Artist + Imagery (Courtroom multi-angle + URL import + plate generate + imagery upsert) before Director generate. Soft-launch plates until real still gen; live path pending VPS deploy.
         Template Forge still extracts style DNA; ARCHIVE5 + Merge unchanged.
       </p>
     </section>
@@ -630,7 +630,7 @@
     </section>
 
     <footer>
-      <span>REELSTORM ACADEMY · Brand Kit 01 · Production Build Scorecard v1.5</span>
+      <span>REELSTORM ACADEMY · Brand Kit 01 · Production Build Scorecard v1.6.1</span>
       <span id="updated">Updated 2026-10-09</span>
     </footer>
   </div>
@@ -640,9 +640,10 @@
       { id: "brand", area: "Brand", item: "Brand Kit 01 tokens + dark OS chrome", weight: 4, status: "pass", detail: "Applied across pages", tier: "A" },
       { id: "pages", area: "Frontend", item: "Factory pages · Forge · Templates · Wallet · Onboarding", weight: 6, status: "pass", detail: "Next production build OK", tier: "A" },
       { id: "forgeUi", area: "Differentiator", item: "Template Forge upload + URL extract + Apply Generate", weight: 8, status: "pass", detail: "Same-origin API/WS · reactive Apply", tier: "B" },
-      { id: "studioSet", area: "Studio Set", item: "Full Studio Set Room · Artist · Imagery + Courtroom pack", weight: 8, status: "pass", detail: "/studio-set · /api/studio-set · Apply to Director", tier: "B" },
+      { id: "studioSet", area: "Studio Set", item: "Full Studio Set Room · Artist · Imagery + Courtroom pack", weight: 8, status: "pass", detail: "Live /studio-set + packs API on app.reelstorm.uk @ 11f52de · soft-launch plates", tier: "B" },
       { id: "studioGuide", area: "Studio Set", item: "AI Guide camera-angle coach layers", weight: 4, status: "pass", detail: "GUIDE_LAYERS /studio-set + module paths", tier: "B" },
-      { id: "artistImport", area: "Studio Set", item: "Artist import from image/video URL", weight: 5, status: "pass", detail: "POST /api/studio-set/artists/import", tier: "B" },
+      { id: "artistImport", area: "Studio Set", item: "Artist import + generate multi-angle plates", weight: 5, status: "pass", detail: "import + POST /artists/:id/generate · soft-launch SVG/URL plates", tier: "B" },
+      { id: "imageryStudio", area: "Studio Set", item: "Imagery upsert + refresh all room plates", weight: 5, status: "pass", detail: "POST /api/studio-set/imagery · soft-launch placeholders · live deployed", tier: "B" },
       { id: "onboard", area: "Frontend", item: "Onboarding ideals + dashboard welcome by name", weight: 4, status: "pass", detail: "Nollywood/Asia/social packs", tier: "A" },
       { id: "tests", area: "Quality", item: "Smoke + production API check scripts", weight: 3, status: "pass", detail: "npm run smoke · check:apis · check:apis:live", tier: "infra" },
     ];
