@@ -2,7 +2,7 @@
   "project": "REELSTORM ACADEMY OS",
   "version": "v1.6.4",
   "updated": "2026-10-10",
-  "git_sha": "pending",
+  "git_sha": "bdbcf1a",
   "live_ui": "/scorecard",
   "studio_set_ui": "/studio-set",
   "pipeline_ui": [
@@ -15,13 +15,14 @@
   "artifact": "artifacts/project-scorecard.html",
   "api_probe": "GET /api/readiness \u2192 production1k",
   "deploy_status": {
-    "github_main": "pending_push",
-    "vps_app_reelstorm_uk": "pending_deploy",
+    "github_main": "pushed",
+    "vps_app_reelstorm_uk": "deploying",
     "landing_hero": "studio_set_layer",
     "studio_set_live": "ok",
     "studio_set_code": "production_test_ready",
     "world_builder_live": "ok",
-    "pipeline_code": "production_test_ready"
+    "pipeline_code": "production_test_ready",
+    "git_sha_vps": "bdbcf1a"
   },
   "architecture": {
     "model": "dual_saver",
