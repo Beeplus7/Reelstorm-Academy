@@ -1,7 +1,8 @@
 /**
  * STORM Guide — system knowledge + workflow improvement options
  * Used by API (LLM grounding) and web (instant page tips).
- * Keep in sync with shipped OS: YT-OS v2, Viral Clone Factory, Pixabay PRIMARY, Account.
+ * Keep in sync with shipped OS: YT-OS v2, Viral Clone Factory, Full Studio Set v1.6.2,
+ * World Builder, Pixabay PRIMARY, Account.
  */
 
 export type GuideOption = {
@@ -22,22 +23,24 @@ export type GuideLayer = {
   options: GuideOption[];
 };
 
-export const GUIDE_SYSTEM_PROMPT = `You are STORM Guide — the in-product AI coach for REELSTORM ACADEMY OS v1.2 / YT-OS v2.
+export const GUIDE_SYSTEM_PROMPT = `You are STORM Guide — the in-product AI coach for REELSTORM ACADEMY OS v1.6.2 / YT-OS v2.
 
 Mission:
-- Teach system knowledge (Factory = OS, RTC, ARCHIVE5, Soul ID, STORM pipeline, BOT Director Wizard, YT-OS 11 skills, Viral Clone Factory).
+- Teach system knowledge (Factory = OS, RTC, ARCHIVE5, Soul ID, Full Studio Set, STORM pipeline, BOT Director Wizard, YT-OS 11 skills, Viral Clone Factory).
 - Improve the operator's workflow with concrete next actions.
 - Stay concise: 2–5 short paragraphs or bullets max.
 - Always offer 2–4 actionable options when helpful (as plain text like "→ Option: …").
 - Never invent API keys or claim jobs finished unless the user said so.
-- Prefer factory order: BOT Director Wizard (or /yt-os / /tools/clone) → Templates Room / Template Forge → Full Studio Set (/studio-set: Room · Artist · Imagery) → Storyboard → Studio → Sound Studio → Archive Vault → Merge Studio. World Builder deep-links into Studio Set.
+- Prefer factory order: BOT Director Wizard (or /yt-os / /tools/clone) → Templates Room / Template Forge → Full Studio Set (/studio-set: Room · Artist · Imagery) → Storyboard → Studio → Sound Studio → Archive Vault → Merge Studio.
+- Full Studio Set (/studio-set) is READY FOR PRODUCTION TESTING on app.reelstorm.uk: Seed Courtroom → Generate room/artist plates → Imagery upsert (refreshes all rooms) → Apply to Director when readiness is green (or Force soft launch ≥60%). Soft-launch plates are SVG/URL stamps until real still gen — coach the lock flow, not photoreal claims.
+- World Builder (/world-builder) is legacy quick Soul + Room lock — also READY FOR PRODUCTION TESTING; always prefer / deep-link into Full Studio Set for multi-angle cast + imagery.
 - Sound Studio is the voice OS (sync · extract · mux · library · TTS). Hosted TTS/clone providers are optional — never block operators on ElevenLabs.
 - Template Room stock intros: Pixabay is PRIMARY (Pexels paused). Cached to R2/local — GET /api/templates?type=intro — $0 Seedance cost for intros.
 - Viral Clone Factory (/tools/clone · /rs-clone): paste YouTube/TikTok/Instagram → Analyze 1 RTC → transformative remake 5 RTC. NEVER copy source video bytes — rewrite transcript + new Pixabay/Seedance assets + watermark.
 - YT-OS v2 (/yt-os): 11 slash skills /rs-viral · /rs-script (21 hooks) · /rs-package · /rs-video · /rs-voice · /rs-thumb · /rs-comments · /rs-plan · /rs-publish · /rs-analytics · /rs-clone — all inside REELSTORM (not external Claude).
 - Account menu (header avatar): Account settings · Change password · Billing · RTC Wallet · Log out. Captain Admin only for locked admin email.
 - Free demo: 1 RTC from SystemBank (4600 RTC pool ≈ 920 × 5-min sets). Free users can analyze/demo; reproduce/vault needs paid RTC.
-- Soft launch: Ollama may power the guide LLM; Stripe test + mock video OK until live DashScope/Seedance/sk_live keys are stamped.
+- Soft launch: Ollama may power the guide LLM; Stripe test + mock video OK until live DashScope/Seedance/sk_live keys are stamped. Scorecard v1.6.2 tracks Studio Set + World Builder production-test readiness.
 - RTC rule: 1 RTC = 1 minute of finished master (720p). One 5-min ARCHIVE5 set = 5 RTC. Tiers: Free Test $0 (1 RTC demo) · Storm / Storm Pro / Premium Pro via /billing + /wallet. Clone: 1 RTC analyze + 5 RTC reproduce.
 
 Tone: sharp producer, not corporate. Brand colors mentally: violet / cyan / orange on void black.
@@ -86,12 +89,13 @@ export const GUIDE_LAYERS: GuideLayer[] = [
     blurb: "STORM stages · YT-OS · Clone · zero timeline scrubbing.",
     tips: [
       "Lock intent before pixels — Story Contract, Wizard, or paste a viral link into Clone Factory.",
-      "Soul ID + room plates before STORM render.",
+      "After templates: Full Studio Set locks Room · Artist · Imagery before Storyboard / STORM render.",
+      "World Builder is a quick Soul/Room stub — prefer /studio-set for production testing.",
       "Sound Studio owns voice after Studio QC — before or alongside vault.",
     ],
     options: [
       { id: "stages", label: "Explain STORM stages", prompt: "Explain each STORM stage and common failure mode.", kind: "learn" },
-      { id: "ytos", label: "Where YT-OS fits", prompt: "How do YT-OS skills feed the factory?", href: "/yt-os", kind: "learn" },
+      { id: "set", label: "Studio Set lock", prompt: "Where does Full Studio Set fit and how do I test Room · Artist · Imagery?", href: "/studio-set", kind: "goto" },
       { id: "wizard", label: "Start with Wizard", prompt: "Should I use BOT Director Wizard, YT-OS, or Template Forge first?", href: "/wizard", kind: "improve" },
       { id: "start", label: "Start production", prompt: "I am ready — what is my first click?", href: "/template-forge", kind: "do" },
     ],
@@ -166,12 +170,12 @@ export const GUIDE_LAYERS: GuideLayer[] = [
     tips: [
       "Check LIVE ENGINE + RTC before queuing Studio.",
       "Header avatar → Account · Billing · Wallet · Log out.",
-      "Prefer BOT Director Wizard or YT-OS for a guided first project.",
+      "Prefer BOT Director Wizard or YT-OS for a guided first project, then Full Studio Set before Storyboard.",
     ],
     options: [
       { id: "next", label: "What next?", prompt: "Based on a fresh project, what should I do next?", kind: "improve" },
       { id: "wizard", label: "Open Wizard", prompt: "Walk me through BOT Director Wizard stages.", href: "/wizard", kind: "do" },
-      { id: "ytos", label: "YT-OS skills", prompt: "Which YT-OS skill should I run first?", href: "/yt-os", kind: "goto" },
+      { id: "set", label: "Studio Set", prompt: "How do I lock Room · Artist · Imagery on Full Studio Set?", href: "/studio-set", kind: "goto" },
       { id: "rtc", label: "Check RTC", prompt: "How do I know if I have enough RTC for 2 ARCHIVE5 blocks?", href: "/wallet", kind: "goto" },
     ],
   },
@@ -179,18 +183,18 @@ export const GUIDE_LAYERS: GuideLayer[] = [
     path: "/wizard",
     layer: "os",
     title: "BOT Director Wizard",
-    blurb: "Seven-stage blueprint · Idea or Clone Viral Link tab.",
+    blurb: "Seven-stage blueprint · Idea or Clone Viral Link → factory handoff.",
     tips: [
       "Step 1 tabs: Generate from Idea OR Clone Viral Link (opens /tools/clone).",
       "Paste YouTube / TikTok / Instagram / social URLs for DNA into LIVE ENGINE.",
       "Free demo 1 RTC can burn for a 1-min watermarked preview.",
-      "When READY, Feed Factory → from-blueprint into STORM.",
+      "When READY, Feed Factory → then lock Full Studio Set (/studio-set) before Storyboard / STORM generate.",
     ],
     options: [
       { id: "stages", label: "Explain 7 stages", prompt: "Explain each BOT Director Wizard stage and what I must enter.", kind: "learn" },
       { id: "clone-tab", label: "Clone Viral Link", prompt: "How do I use the Clone Viral Link tab vs idea generate?", href: "/tools/clone", kind: "goto" },
       { id: "generate", label: "Generate blueprint", prompt: "How do I generate a blueprint and know it succeeded?", kind: "do" },
-      { id: "handoff", label: "Into factory", prompt: "How do I hand a blueprint off to Studio / Archive?", kind: "improve" },
+      { id: "set", label: "Next: Studio Set", prompt: "After Feed Factory, how do I lock Room · Artist · Imagery before Storyboard?", href: "/studio-set", kind: "goto" },
     ],
   },
   {
@@ -283,32 +287,34 @@ export const GUIDE_LAYERS: GuideLayer[] = [
     path: "/studio-set",
     layer: "os",
     title: "Full Studio Set",
-    blurb: "Room · Artist · Imagery — lock every camera angle before Director generate.",
+    blurb: "Room · Artist · Imagery — READY FOR PRODUCTION TESTING (soft-launch plates).",
     tips: [
-      "Seed Courtroom Drama for a complete multi-angle legal set (establishing → gavel close).",
-      "Import artists from image or video URLs — front / left / right / 3Q must pass.",
-      "Customize background prompts in Imagery Studio; Apply to Director only when readiness is green.",
-      "AI Guide tours framing for operators who do not know camera angles.",
+      "Paste a Project ID → Seed Courtroom Drama for establishing → wide → medium → OSH → close.",
+      "Room tab: set Prompt DNA → Generate plates. Artist tab: import URL or Generate plates (front/left/right/3Q).",
+      "Imagery tab: customize background prompt → Save upserts pack and refreshes ALL room plates.",
+      "Apply to Director when readiness is green; Force apply allows soft-launch partial ≥60%.",
+      "Soft-launch: plates may be SVG/URL stamps — still valid for lock-flow testing until real still gen.",
     ],
     options: [
-      { id: "tour", label: "Courtroom tour", prompt: "Walk me through courtroom camera angles like a DP — establishing to insert.", kind: "learn" },
-      { id: "angles", label: "What's missing?", prompt: "Given my Studio Set readiness, which angles still block Apply to Director?", kind: "improve" },
-      { id: "artist", label: "Import artist", prompt: "How do I import a cast artist from an image or video URL with all angles?", kind: "do" },
-      { id: "apply", label: "Apply to Director", prompt: "Checklist before Apply to Director and open Storyboard.", href: "/storyboard", kind: "goto" },
+      { id: "test", label: "Production test path", prompt: "Give me the exact production-test checklist for Studio Set on a live project ID.", kind: "do" },
+      { id: "court", label: "Courtroom tour", prompt: "Walk me through courtroom camera angles like a DP — establishing to insert.", kind: "learn" },
+      { id: "imagery", label: "Imagery refresh", prompt: "How does Imagery upsert refresh room plates and when should I use it?", kind: "learn" },
+      { id: "apply", label: "Apply to Director", prompt: "Checklist before Apply to Director, then open Storyboard.", href: "/storyboard", kind: "goto" },
     ],
   },
   {
     path: /^\/studio-set\/(room|artist|imagery)/,
     layer: "os",
     title: "Studio Set module",
-    blurb: "Camera coach for Room, Artist, or Imagery tabs.",
+    blurb: "Camera coach for Room, Artist, or Imagery — production-test ready.",
     tips: [
       "Wide = geography. Medium = dialogue. OSH = confrontation. Close/insert = emphasis.",
-      "Fresh artist plates when wardrobe or scene lighting changes.",
-      "Prompt-customize imagery, then regenerate room plates so backgrounds match the drama.",
+      "Artist Generate stamps soft-launch plates (or URL#angle) so readiness is not stuck on pending.",
+      "Imagery Save upserts the pack and regenerates every Room angle from the customized prompt.",
     ],
     options: [
       { id: "framing", label: "Framing cheat sheet", prompt: "Explain wide, medium, OSH, close, insert, establishing, reaction for new directors.", kind: "learn" },
+      { id: "gen", label: "Generate plates", prompt: "When do I hit Generate plates on Room vs Artist?", kind: "do" },
       { id: "set", label: "Back to Studio Set", prompt: "Return to Full Studio Set overview.", href: "/studio-set", kind: "goto" },
     ],
   },
@@ -316,24 +322,30 @@ export const GUIDE_LAYERS: GuideLayer[] = [
     path: "/world-builder",
     layer: "os",
     title: "World Builder",
-    blurb: "Legacy Soul/Room lock — prefer Full Studio Set.",
+    blurb: "Quick Soul + Room lock — READY FOR PRODUCTION TESTING; prefer Studio Set.",
     tips: [
-      "Use /studio-set for multi-angle Room + Artist + Imagery with AI Guide.",
-      "World Builder still locks basic Soul ID + 4 plates if you need a quick stub.",
+      "Enter a real Project ID, then Lock Soul ID and/or Lock Room Plates.",
+      "Open Studio Set (passes projectId) for multi-angle Room · Artist · Imagery production lock.",
+      "World Builder is the stub path; Full Studio Set is the production-test path before Storyboard.",
     ],
     options: [
-      { id: "set", label: "Open Studio Set", prompt: "Take me to Full Studio Set to lock courtroom angles and cast.", href: "/studio-set", kind: "goto" },
-      { id: "soul", label: "Quick Soul stub", prompt: "How do I lock Soul ID correctly on World Builder?", kind: "do" },
-      { id: "board", label: "Next: Storyboard", prompt: "Move me to storyboard with a clean checklist.", href: "/storyboard", kind: "goto" },
+      { id: "set", label: "Open Studio Set", prompt: "Take me to Full Studio Set to lock courtroom angles and cast with my project ID.", href: "/studio-set", kind: "goto" },
+      { id: "soul", label: "Lock Soul", prompt: "How do I lock Soul ID correctly on World Builder without errors?", kind: "do" },
+      { id: "room", label: "Lock Room", prompt: "How do Room Memory plates map to Studio Set angles?", kind: "learn" },
+      { id: "board", label: "Next: Storyboard", prompt: "When is it safe to leave World Builder / Studio Set for Storyboard?", href: "/storyboard", kind: "goto" },
     ],
   },
   {
     path: "/storyboard",
     layer: "os",
     title: "Storyboard",
-    blurb: "Beat map under 5 minutes per ARCHIVE5.",
-    tips: ["Break script into timed beats the STORM engine can parallelize."],
+    blurb: "Beat map under 5 minutes per ARCHIVE5 — after Studio Set lock.",
+    tips: [
+      "Confirm Full Studio Set applied (or World Builder stub) before breaking beats.",
+      "Break script into timed beats the STORM engine can parallelize.",
+    ],
     options: [
+      { id: "set", label: "Studio Set first?", prompt: "Do I need Apply to Director before Storyboard?", href: "/studio-set", kind: "improve" },
       { id: "beats", label: "Beat sizing", prompt: "How long should each beat be for ARCHIVE5?", kind: "improve" },
       { id: "studio", label: "Queue Studio", prompt: "Board approved — how do I queue Studio?", href: "/studio", kind: "do" },
     ],
@@ -473,15 +485,17 @@ export const GUIDE_LAYERS: GuideLayer[] = [
     path: "/scorecard",
     layer: "os",
     title: "Scorecard",
-    blurb: "Production readiness gates (v1.2 / soft-launch).",
+    blurb: "Production readiness gates (v1.6.2) — Studio Set + World Builder test-ready.",
     tips: [
-      "Target grade A on /api/readiness before academy launch.",
+      "v1.6.2 marks Full Studio Set and World Builder READY FOR PRODUCTION TESTING (soft-launch plates).",
+      "Target grade A on /api/readiness before academy launch; video_gen may still block ship-ready.",
       "Soft launch: Ollama LLM, Stripe test, mock video can PASS with SOFT_LAUNCH=1.",
-      "Confirm Pixabay intros filled + YT-OS/clone routes healthy after deploy.",
+      "Confirm /studio-set packs + Apply path and Pixabay intros after deploy.",
     ],
     options: [
+      { id: "set", label: "Test Studio Set", prompt: "How do I production-test Room · Artist · Imagery from the scorecard status?", href: "/studio-set", kind: "goto" },
       { id: "gaps", label: "Close gaps", prompt: "Typical readiness gaps and how to close them on soft launch.", kind: "improve" },
-      { id: "api", label: "API readiness", prompt: "What does /api/readiness check now?", kind: "learn" },
+      { id: "api", label: "API readiness", prompt: "What does /api/readiness check now vs scorecard Studio Set rows?", kind: "learn" },
       { id: "train", label: "Training checklist", prompt: "Point me to the Training Manual launch checklist page.", href: "/training", kind: "goto" },
     ],
   },
