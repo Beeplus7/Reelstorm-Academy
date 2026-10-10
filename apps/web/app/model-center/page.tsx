@@ -26,6 +26,12 @@ export default function ModelCenterPage() {
           Local Ollama <span className="text-cyan">llama3.1:8b</span> works without DashScope.
         </p>
       </div>
+      <div className="rounded-rs-xl border border-orange/30 bg-orange/10 px-4 py-3 text-sm text-white/75">
+        <span className="mono text-[10px] text-orange mr-2">SOFT-LAUNCH TESTABLE</span>
+        UI saves keys locally for demos. Production engines must be stamped in VPS{" "}
+        <span className="mono text-[10px] text-white/50">.env</span> (DashScope / Seedance / R2). Scorecard still
+        blocks on object_storage + video_gen until those are green.
+      </div>
       <div className="rounded-rs-xl border border-white/[0.08] bg-panel p-6 space-y-4">
         <label className="block">
           <span className="mono text-[10px] text-violet-soft">01 — DASHSCOPE_API_KEY</span>

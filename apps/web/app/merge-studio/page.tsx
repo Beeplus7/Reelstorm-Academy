@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { api } from "@/lib/api";
 
 export default function MergeStudioPage() {
@@ -8,6 +9,7 @@ export default function MergeStudioPage() {
   const [blockIds, setBlockIds] = useState("");
   const [title, setTitle] = useState("30-Min Master");
   const [msg, setMsg] = useState("");
+  const [busy, setBusy] = useState(false);
 
   async function merge() {
     const ids = blockIds
@@ -15,11 +17,19 @@ export default function MergeStudioPage() {
       .map((s) => s.trim())
       .filter(Boolean);
     if (!projectId || ids.length < 1) return setMsg("Need projectId and at least one blockId");
-    const res = await api<{ jobId: string }>("/api/merge", {
-      method: "POST",
-      body: JSON.stringify({ projectId, blockIds: ids, title }),
-    });
-    setMsg(`Merge job ${res.jobId} queued — FFmpeg concat demuxer`);
+    setBusy(true);
+    setMsg("");
+    try {
+      const res = await api<{ jobId: string }>("/api/merge", {
+        method: "POST",
+        body: JSON.stringify({ projectId, blockIds: ids, title }),
+      });
+      setMsg(`Merge job ${res.jobId} queued — FFmpeg concat demuxer`);
+    } catch (e) {
+      setMsg((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -30,6 +40,14 @@ export default function MergeStudioPage() {
         <p className="mt-3 text-white/60">
           Select 3–6 ARCHIVE5 blocks. FFmpeg concatenates into a 15–30 min master with cold-open + cliffhanger slots.
         </p>
+      </div>
+      <div className="rounded-rs-xl border border-orange/30 bg-orange/10 px-4 py-3 text-sm text-white/75">
+        <span className="mono text-[10px] text-orange mr-2">READY FOR PRODUCTION TESTING</span>
+        Queue path is live. Copy block IDs from{" "}
+        <Link href="/archive-vault" className="text-cyan underline-offset-2 hover:underline">
+          Archive Vault
+        </Link>{" "}
+        after a successful split.
       </div>
       <div className="rounded-rs-xl border border-white/[0.08] bg-panel p-6 space-y-4">
         <input
@@ -50,7 +68,12 @@ export default function MergeStudioPage() {
           placeholder="Block IDs (comma or space separated)"
           className="w-full min-h-[120px] rounded-rs bg-void border border-white/10 p-3 text-sm"
         />
-        <button onClick={merge} className="w-full h-12 rounded-rs bg-orange text-black font-bold">
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => void merge()}
+          className="w-full h-12 rounded-rs bg-orange text-black font-bold disabled:opacity-40"
+        >
           Merge Master MP4
         </button>
         {msg && <div className="text-sm text-white/60">{msg}</div>}

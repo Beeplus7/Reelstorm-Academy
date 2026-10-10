@@ -126,8 +126,8 @@ set_kv UPLOAD_TMP_DIR $APP_DIR/tmp/uploads
 set_kv MOCK_VIDEO_GEN 0
 set_kv WORKER_CONCURRENCY 8
 set_kv VIDEO_PROVIDER auto
-# Live RunPod GPU saver — do not clobber if already set in .env (port may be 3000 or 8000)
-if ! grep -q '^RUNPOD_SAVER_URL=.\+' $APP_DIR/.env 2>/dev/null; then
+# Live RunPod GPU saver — fix known pod-ID typo (41511 vs 4l51); keep custom ports if already correct
+if grep -q 'xuvnute41511og' $APP_DIR/.env 2>/dev/null || ! grep -q '^RUNPOD_SAVER_URL=.\+' $APP_DIR/.env 2>/dev/null; then
   set_kv RUNPOD_SAVER_URL https://xuvnute4l51iog-8000.proxy.runpod.net/generate
 fi
 set_kv RUNPOD_POD_ID xuvnute4l51iog

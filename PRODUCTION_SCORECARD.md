@@ -1,12 +1,34 @@
 # REELSTORM ACADEMY OS — Production Build Scorecard
 
-**Version:** v1.6.2 (Studio Set + World Builder — ready for production testing)  
-**Live UI:** `/scorecard` · `/studio-set` · `/world-builder`  
+**Version:** v1.6.3 (Full factory pipeline — production-test ready matrix)  
+**Live UI:** `/scorecard` · `/studio-set` · `/world-builder` · `/storyboard` · `/studio` · `/sound-studio` · `/archive-vault` · `/merge-studio`  
 **Artifact view:** [`artifacts/project-scorecard.html`](artifacts/project-scorecard.html) — full scorecard + architecture + system tiers (A/B/C/infra)  
 **API probe:** `GET /api/readiness` → `production1k`  
 **Git:** `Beeplus7/Reelstorm-Academy` `main`  
 **Live deploy:** **LIVE** on `app.reelstorm.uk`  
-**Production testing:** **READY** — live E2E verified 2026-10-10 (seed → plates → imagery → Apply; World Builder soul/room)
+**Production testing:** Pipeline rooms marked below — soft-launch OK unless noted
+
+### Pipeline production-test matrix (2026-10-10)
+
+| Surface | Status | Notes |
+|---------|--------|-------|
+| Studio Set `/studio-set` | **READY** | E2E seed→Apply 100% |
+| World Builder `/world-builder` | **READY** | Soul/Room + deep-link |
+| Storyboard `/storyboard` | **READY** | Needs project **script**; generate+approve E2E |
+| Studio `/studio` | **READY** | Queues `/api/generate` jobId (mock OK) |
+| Sound Studio `/sound-studio` | **READY** | Library + demo bed; ElevenLabs optional |
+| Archive Vault `/archive-vault` | **READY** | List live; split needs uploadId |
+| Merge Studio `/merge-studio` | **READY** | Queue live; needs vault blockIds |
+| `/generate` RunPod saver | **PARTIAL** | saver-health 404 until pod URL green |
+| Ship-ready video/R2 | **BLOCKED** | production1k: object_storage + video_gen |
+
+## Gaps closed in v1.6.3
+
+| Gap | Fix |
+|-----|-----|
+| Rest of factory untested vs Studio Set | Live API E2E + UI banners + STORM Guide for Storyboard→Merge |
+| Silent Storyboard/Archive/Merge errors | try/catch + operator messages |
+| Scorecard silent on pipeline | Static rows for storyboard/studio/sound/archive-merge + RunPod partial |
 
 ## Gaps closed in v1.6.2
 

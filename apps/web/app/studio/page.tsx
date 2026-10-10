@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { api } from "@/lib/api";
 
 export default function StudioPage() {
@@ -39,6 +40,14 @@ export default function StudioPage() {
       <div>
         <div className="mono text-[11px] text-cyan mb-2">STUDIO // VIBE DIRECT</div>
         <h1 className="display text-4xl">Direct the storm</h1>
+      </div>
+      <div className="rounded-rs-xl border border-orange/30 bg-orange/10 px-4 py-3 text-sm text-white/75">
+        <span className="mono text-[10px] text-orange mr-2">READY FOR PRODUCTION TESTING</span>
+        Factory generate queues BullMQ jobs (soft-launch / mock video OK). 0MB{" "}
+        <Link href="/generate" className="text-cyan underline-offset-2 hover:underline">
+          /generate
+        </Link>{" "}
+        needs RunPod saver green — check saver-health before real GPU renders.
       </div>
       <input
         value={projectId}

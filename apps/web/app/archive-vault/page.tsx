@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { api } from "@/lib/api";
 
 type Block = {
@@ -17,12 +18,16 @@ export default function ArchiveVaultPage() {
   const [projectId, setProjectId] = useState("");
   const [uploadId, setUploadId] = useState("");
   const [msg, setMsg] = useState("");
+  const [busy, setBusy] = useState(false);
 
   function load(pid?: string) {
     const q = pid ? `?projectId=${pid}` : "";
     api<{ blocks: Block[] }>(`/api/archive${q}`)
       .then((d) => setBlocks(d.blocks))
-      .catch(() => setBlocks([]));
+      .catch((e) => {
+        setBlocks([]);
+        setMsg((e as Error).message);
+      });
   }
 
   useEffect(() => {
@@ -31,12 +36,20 @@ export default function ArchiveVaultPage() {
 
   async function split() {
     if (!projectId || !uploadId) return setMsg("Need projectId + uploadId");
-    const res = await api<{ jobId: string }>("/api/archive/split", {
-      method: "POST",
-      body: JSON.stringify({ projectId, uploadId }),
-    });
-    setMsg(`Split job ${res.jobId} queued`);
-    setTimeout(() => load(projectId), 1500);
+    setBusy(true);
+    setMsg("");
+    try {
+      const res = await api<{ jobId: string }>("/api/archive/split", {
+        method: "POST",
+        body: JSON.stringify({ projectId, uploadId }),
+      });
+      setMsg(`Split job ${res.jobId} queued`);
+      setTimeout(() => load(projectId), 1500);
+    } catch (e) {
+      setMsg((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -47,6 +60,14 @@ export default function ArchiveVaultPage() {
         <p className="mt-3 text-white/60">
           Auto-split long uploads (30m+) into searchable, merge-ready ARCHIVE5 blocks.
         </p>
+      </div>
+      <div className="rounded-rs-xl border border-orange/30 bg-orange/10 px-4 py-3 text-sm text-white/75">
+        <span className="mono text-[10px] text-orange mr-2">READY FOR PRODUCTION TESTING</span>
+        List/refresh is live. Split needs a real Upload ID from Template Forge / upload. Then merge in{" "}
+        <Link href="/merge-studio" className="text-cyan underline-offset-2 hover:underline">
+          Merge Studio
+        </Link>
+        .
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -62,10 +83,19 @@ export default function ArchiveVaultPage() {
           placeholder="Upload ID"
           className="h-11 rounded-rs bg-panel border border-white/10 px-3 flex-1 min-w-[160px]"
         />
-        <button onClick={split} className="h-11 px-5 rounded-rs bg-orange text-black font-bold text-sm">
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => void split()}
+          className="h-11 px-5 rounded-rs bg-orange text-black font-bold text-sm disabled:opacity-40"
+        >
           Split → ARCHIVE5
         </button>
-        <button onClick={() => load(projectId || undefined)} className="h-11 px-4 rounded-rs border border-white/10 text-sm">
+        <button
+          type="button"
+          onClick={() => load(projectId || undefined)}
+          className="h-11 px-4 rounded-rs border border-white/10 text-sm"
+        >
           Refresh
         </button>
       </div>

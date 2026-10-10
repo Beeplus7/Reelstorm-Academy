@@ -1,8 +1,8 @@
 /**
  * STORM Guide — system knowledge + workflow improvement options
  * Used by API (LLM grounding) and web (instant page tips).
- * Keep in sync with shipped OS: YT-OS v2, Viral Clone Factory, Full Studio Set v1.6.2,
- * World Builder, Pixabay PRIMARY, Account.
+ * Keep in sync with shipped OS: YT-OS v2, Viral Clone Factory, Full Studio Set v1.6.3,
+ * factory pipeline (Storyboard→Merge), World Builder, Pixabay PRIMARY, Account.
  */
 
 export type GuideOption = {
@@ -23,7 +23,7 @@ export type GuideLayer = {
   options: GuideOption[];
 };
 
-export const GUIDE_SYSTEM_PROMPT = `You are STORM Guide — the in-product AI coach for REELSTORM ACADEMY OS v1.6.2 / YT-OS v2.
+export const GUIDE_SYSTEM_PROMPT = `You are STORM Guide — the in-product AI coach for REELSTORM ACADEMY OS v1.6.3 / YT-OS v2.
 
 Mission:
 - Teach system knowledge (Factory = OS, RTC, ARCHIVE5, Soul ID, Full Studio Set, STORM pipeline, BOT Director Wizard, YT-OS 11 skills, Viral Clone Factory).
@@ -34,13 +34,14 @@ Mission:
 - Prefer factory order: BOT Director Wizard (or /yt-os / /tools/clone) → Templates Room / Template Forge → Full Studio Set (/studio-set: Room · Artist · Imagery) → Storyboard → Studio → Sound Studio → Archive Vault → Merge Studio.
 - Full Studio Set (/studio-set) is READY FOR PRODUCTION TESTING on app.reelstorm.uk: Seed Courtroom → Generate room/artist plates → Imagery upsert (refreshes all rooms) → Apply to Director when readiness is green (or Force soft launch ≥60%). Soft-launch plates are SVG/URL stamps until real still gen — coach the lock flow, not photoreal claims.
 - World Builder (/world-builder) is legacy quick Soul + Room lock — also READY FOR PRODUCTION TESTING; always prefer / deep-link into Full Studio Set for multi-angle cast + imagery.
+- Storyboard / Studio / Sound / Archive / Merge are READY FOR PRODUCTION TESTING for soft-launch queues. Real GPU /generate needs green RunPod saver-health; Archive split needs uploadId; Merge needs vault blockIds; Sound clone/TTS needs ElevenLabs only when testing voice forge.
 - Sound Studio is the voice OS (sync · extract · mux · library · TTS). Hosted TTS/clone providers are optional — never block operators on ElevenLabs.
 - Template Room stock intros: Pixabay is PRIMARY (Pexels paused). Cached to R2/local — GET /api/templates?type=intro — $0 Seedance cost for intros.
 - Viral Clone Factory (/tools/clone · /rs-clone): paste YouTube/TikTok/Instagram → Analyze 1 RTC → transformative remake 5 RTC. NEVER copy source video bytes — rewrite transcript + new Pixabay/Seedance assets + watermark.
 - YT-OS v2 (/yt-os): 11 slash skills /rs-viral · /rs-script (21 hooks) · /rs-package · /rs-video · /rs-voice · /rs-thumb · /rs-comments · /rs-plan · /rs-publish · /rs-analytics · /rs-clone — all inside REELSTORM (not external Claude).
 - Account menu (header avatar): Account settings · Change password · Billing · RTC Wallet · Log out. Captain Admin only for locked admin email.
 - Free demo: 1 RTC from SystemBank (4600 RTC pool ≈ 920 × 5-min sets). Free users can analyze/demo; reproduce/vault needs paid RTC.
-- Soft launch: Ollama may power the guide LLM; Stripe test + mock video OK until live DashScope/Seedance/sk_live keys are stamped. Scorecard v1.6.2 tracks Studio Set + World Builder production-test readiness.
+- Soft launch: Ollama may power the guide LLM; Stripe test + mock video OK until live DashScope/Seedance/sk_live keys are stamped. Scorecard v1.6.3 tracks the full factory pipeline production-test matrix.
 - RTC rule: 1 RTC = 1 minute of finished master (720p). One 5-min ARCHIVE5 set = 5 RTC. Tiers: Free Test $0 (1 RTC demo) · Storm / Storm Pro / Premium Pro via /billing + /wallet. Clone: 1 RTC analyze + 5 RTC reproduce.
 
 Tone: sharp producer, not corporate. Brand colors mentally: violet / cyan / orange on void black.
@@ -339,14 +340,15 @@ export const GUIDE_LAYERS: GuideLayer[] = [
     path: "/storyboard",
     layer: "os",
     title: "Storyboard",
-    blurb: "Beat map under 5 minutes per ARCHIVE5 — after Studio Set lock.",
+    blurb: "READY FOR PRODUCTION TESTING — needs project script + preferably Studio Set applied.",
     tips: [
+      "Project must have a script (PATCH /api/projects/:id) or Generate Board returns an error.",
       "Confirm Full Studio Set applied (or World Builder stub) before breaking beats.",
-      "Break script into timed beats the STORM engine can parallelize.",
+      "Approve frames, then queue Studio with the same project ID.",
     ],
     options: [
+      { id: "test", label: "Test path", prompt: "Exact production-test steps for Storyboard on a live project.", kind: "do" },
       { id: "set", label: "Studio Set first?", prompt: "Do I need Apply to Director before Storyboard?", href: "/studio-set", kind: "improve" },
-      { id: "beats", label: "Beat sizing", prompt: "How long should each beat be for ARCHIVE5?", kind: "improve" },
       { id: "studio", label: "Queue Studio", prompt: "Board approved — how do I queue Studio?", href: "/studio", kind: "do" },
     ],
   },
@@ -354,10 +356,15 @@ export const GUIDE_LAYERS: GuideLayer[] = [
     path: "/studio",
     layer: "os",
     title: "Studio",
-    blurb: "STORM parallel render + QC.",
-    tips: ["Retry only failed blocks; never re-render passed QC."],
+    blurb: "READY FOR PRODUCTION TESTING — Vibe Direct queues BullMQ generate jobs.",
+    tips: [
+      "Attach Project ID + vibe note → POST /api/generate returns jobId (soft-launch / mock video OK).",
+      "0MB /generate saver path needs RunPod saver-health green (correct pod ID in RUNPOD_SAVER_URL).",
+      "Retry only failed blocks; never re-render passed QC.",
+    ],
     options: [
-      { id: "qc", label: "QC gates", prompt: "Explain QC pass/fail and what to do on fail.", kind: "learn" },
+      { id: "test", label: "Queue a job", prompt: "How do I production-test Studio Vibe Direct safely?", kind: "do" },
+      { id: "saver", label: "Saver health", prompt: "What does /api/studio/saver-health mean and how do I fix 404?", href: "/generate", kind: "learn" },
       { id: "sound", label: "Add audio next?", prompt: "Should I sync voice before or after vault?", href: "/sound-studio", kind: "improve" },
       { id: "vault", label: "Vault blocks", prompt: "How do I promote QC-pass blocks to ARCHIVE5?", href: "/archive-vault", kind: "do" },
     ],
@@ -366,10 +373,10 @@ export const GUIDE_LAYERS: GuideLayer[] = [
     path: "/sound-studio",
     layer: "os",
     title: "Sound Studio",
-    blurb: "Voice OS — sync · extract · mux · library · /rs-voice.",
+    blurb: "READY FOR PRODUCTION TESTING — library/demo live; ElevenLabs optional.",
     tips: [
-      "Sound Studio owns all voice work; hosted clone/TTS keys are optional.",
-      "YT-OS /rs-voice redirects here for clone + TTS.",
+      "Sound Studio owns all voice work; hosted clone/TTS keys are optional on soft launch.",
+      "Demo bed + library endpoints work without ElevenLabs; clone/TTS need ELEVENLABS_API_KEY.",
       "Sync needs a Template Forge uploadId + audio file/URL/asset.",
     ],
     options: [
@@ -383,9 +390,14 @@ export const GUIDE_LAYERS: GuideLayer[] = [
     path: "/archive-vault",
     layer: "os",
     title: "Archive Vault",
-    blurb: "Immutable 5-min IP — 5 RTC each (1 RTC/min).",
-    tips: ["Tag series/episode/brand so remix stays findable."],
+    blurb: "READY FOR PRODUCTION TESTING — list live; split needs Upload ID.",
+    tips: [
+      "Refresh lists vault blocks; Split queues archiveBlock with projectId + uploadId from Template Forge.",
+      "Tag series/episode/brand so remix stays findable.",
+      "Empty vault is normal until you split a long upload.",
+    ],
     options: [
+      { id: "test", label: "Test split", prompt: "How do I production-test ARCHIVE5 split with a real uploadId?", kind: "do" },
       { id: "debit", label: "RTC debit", prompt: "When exactly is RTC debited for ARCHIVE5? (5 RTC per 5-min set)", kind: "learn" },
       { id: "merge", label: "Ready to merge?", prompt: "Checklist before Merge Studio.", href: "/merge-studio", kind: "improve" },
     ],
@@ -394,11 +406,16 @@ export const GUIDE_LAYERS: GuideLayer[] = [
     path: "/merge-studio",
     layer: "os",
     title: "Merge Studio",
-    blurb: "Concatenate ARCHIVE5 → bankable master.",
-    tips: ["Never re-unlock Soul during merge — only vault IDs."],
+    blurb: "READY FOR PRODUCTION TESTING — queue merge with vault block IDs.",
+    tips: [
+      "Need projectId + at least one Archive Vault blockId (comma/space separated).",
+      "Never re-unlock Soul during merge — only vault IDs.",
+      "FFmpeg concat runs on the worker — watch PM2/worker logs if job hangs.",
+    ],
     options: [
+      { id: "test", label: "Test merge", prompt: "Exact production-test fields for POST /api/merge.", kind: "do" },
       { id: "order", label: "Block order", prompt: "How should I order blocks for a 30-min master?", kind: "improve" },
-      { id: "merge", label: "Run merge", prompt: "Exact fields needed for POST /api/merge.", kind: "do" },
+      { id: "vault", label: "Get block IDs", prompt: "Where do I copy ARCHIVE5 block IDs?", href: "/archive-vault", kind: "goto" },
     ],
   },
   {
@@ -485,17 +502,18 @@ export const GUIDE_LAYERS: GuideLayer[] = [
     path: "/scorecard",
     layer: "os",
     title: "Scorecard",
-    blurb: "Production readiness gates (v1.6.2) — Studio Set + World Builder test-ready.",
+    blurb: "Production readiness gates (v1.6.3) — full factory pipeline test matrix.",
     tips: [
-      "v1.6.2 marks Full Studio Set and World Builder READY FOR PRODUCTION TESTING (soft-launch plates).",
-      "Target grade A on /api/readiness before academy launch; video_gen may still block ship-ready.",
+      "v1.6.3: Studio Set · World Builder · Storyboard · Studio · Sound · Archive · Merge marked READY FOR PRODUCTION TESTING.",
+      "RunPod saver-health may still be PARTIAL — soft-launch queues work; real GPU /generate waits on pod URL.",
+      "Target grade A on /api/readiness before academy launch; video_gen + object_storage may still block ship-ready.",
       "Soft launch: Ollama LLM, Stripe test, mock video can PASS with SOFT_LAUNCH=1.",
-      "Confirm /studio-set packs + Apply path and Pixabay intros after deploy.",
     ],
     options: [
       { id: "set", label: "Test Studio Set", prompt: "How do I production-test Room · Artist · Imagery from the scorecard status?", href: "/studio-set", kind: "goto" },
+      { id: "pipe", label: "Test pipeline", prompt: "Order to production-test Storyboard → Studio → Sound → Archive → Merge.", kind: "do" },
       { id: "gaps", label: "Close gaps", prompt: "Typical readiness gaps and how to close them on soft launch.", kind: "improve" },
-      { id: "api", label: "API readiness", prompt: "What does /api/readiness check now vs scorecard Studio Set rows?", kind: "learn" },
+      { id: "api", label: "API readiness", prompt: "What does /api/readiness check now vs scorecard pipeline rows?", kind: "learn" },
       { id: "train", label: "Training checklist", prompt: "Point me to the Training Manual launch checklist page.", href: "/training", kind: "goto" },
     ],
   },

@@ -280,6 +280,11 @@ function SoundStudioInner() {
           speak any script through Voice Forge.
         </p>
       </div>
+      <div className="rounded-rs-xl border border-orange/30 bg-orange/10 px-4 py-3 text-sm text-white/75">
+        <span className="mono text-[10px] text-orange mr-2">READY FOR PRODUCTION TESTING</span>
+        Library + demo bed live without ElevenLabs. Clone/TTS need{" "}
+        <span className="mono text-[10px] text-white/50">ELEVENLABS_API_KEY</span> on the VPS for full voice forge.
+      </div>
 
       <div className="rounded-rs-xl border border-white/[0.08] bg-panel p-4">
         <input
