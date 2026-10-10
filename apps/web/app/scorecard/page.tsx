@@ -26,6 +26,14 @@ type Production1k = {
 const STATIC: Array<Omit<Check, "status" | "detail"> & { status: CheckStatus; detail: string }> = [
   { id: "brand", area: "Brand", item: "Brand Kit 01 tokens + dark OS chrome", weight: 4, status: "pass", detail: "Applied across pages" },
   { id: "pages", area: "Frontend", item: "Factory pages · Forge · Templates · Wallet · Onboarding", weight: 6, status: "pass", detail: "Next production build OK" },
+  {
+    id: "landingHero",
+    area: "Brand",
+    item: "Landing hero · Studio Set layer messaging",
+    weight: 5,
+    status: "pass",
+    detail: "v1.6.4: hero SET frames · Lock Studio Set CTA · pipeline WORLD→STUDIO SET · marketing section",
+  },
   { id: "forgeUi", area: "Differentiator", item: "Template Forge upload + URL extract + Apply Generate", weight: 8, status: "pass", detail: "Same-origin API/WS · reactive Apply" },
   {
     id: "studioSet",
@@ -89,7 +97,7 @@ const STATIC: Array<Omit<Check, "status" | "detail"> & { status: CheckStatus; de
     item: "RunPod saver-health for /generate",
     weight: 6,
     status: "partial",
-    detail: "BLOCKER for real GPU: saver-health 404 until RUNPOD_SAVER_URL pod ID/port green",
+    detail: "PARTIAL: VPS URL fixed to xuvnute4l51iog — still 404 until RunPod HTTP 8000 is RUNNING",
   },
   { id: "onboard", area: "Frontend", item: "Onboarding ideals + dashboard welcome by name", weight: 4, status: "pass", detail: "Nollywood/Asia/social packs · Welcome / Welcome back" },
   { id: "tests", area: "Quality", item: "Smoke + production API check scripts", weight: 3, status: "pass", detail: "npm run smoke · npm run check:apis · check:apis:live" },

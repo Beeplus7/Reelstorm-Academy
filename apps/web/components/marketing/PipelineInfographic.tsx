@@ -2,9 +2,9 @@
 
 const STEPS = [
   { n: "01", name: "IDEA / LINK", sub: "Wizard · YT-OS · Clone viral URL", color: "#C4B5FD" },
-  { n: "02", name: "WORLD", sub: "Soul ID + 4-angle Perfect Room", color: "#7C3AED" },
+  { n: "02", name: "STUDIO SET", sub: "Room · Artist · Imagery lock", color: "#7C3AED" },
   { n: "03", name: "STORYBOARD", sub: "Lock first frames before pixels move", color: "#00D9FF" },
-  { n: "04", name: "STORM", sub: "Seedance render · Pixabay intros $0", color: "#00D9FF" },
+  { n: "04", name: "STORM", sub: "Render · Sound · Pixabay intros $0", color: "#00D9FF" },
   { n: "05", name: "ARCHIVE5", sub: "Immutable 5-min IP · 5 RTC", color: "#FF7A00" },
   { n: "06", name: "MERGE", sub: "FFmpeg concat to bankable master", color: "#FF7A00" },
 ];
@@ -78,7 +78,7 @@ export function PipelineInfographic() {
         {[
           { k: "BLOCK", v: "5 MIN" },
           { k: "MASTER", v: "30 MIN" },
-          { k: "ANGLES", v: "4 LOCKED" },
+          { k: "SET", v: "R · A · I" },
           { k: "ENGINES", v: "3 VIDEO" },
         ].map((m) => (
           <div key={m.k} className="bg-[#0A0A0A] px-5 py-5 text-center">

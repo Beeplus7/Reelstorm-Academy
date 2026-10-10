@@ -1,8 +1,8 @@
 /**
  * STORM Guide — system knowledge + workflow improvement options
  * Used by API (LLM grounding) and web (instant page tips).
- * Keep in sync with shipped OS: YT-OS v2, Viral Clone Factory, Full Studio Set v1.6.3,
- * factory pipeline (Storyboard→Merge), World Builder, Pixabay PRIMARY, Account.
+ * Keep in sync with shipped OS: YT-OS v2, Viral Clone Factory, Full Studio Set v1.6.4,
+ * landing Studio Set layer, factory pipeline (Storyboard→Merge), World Builder, Pixabay PRIMARY.
  */
 
 export type GuideOption = {
@@ -23,7 +23,7 @@ export type GuideLayer = {
   options: GuideOption[];
 };
 
-export const GUIDE_SYSTEM_PROMPT = `You are STORM Guide — the in-product AI coach for REELSTORM ACADEMY OS v1.6.3 / YT-OS v2.
+export const GUIDE_SYSTEM_PROMPT = `You are STORM Guide — the in-product AI coach for REELSTORM ACADEMY OS v1.6.4 / YT-OS v2.
 
 Mission:
 - Teach system knowledge (Factory = OS, RTC, ARCHIVE5, Soul ID, Full Studio Set, STORM pipeline, BOT Director Wizard, YT-OS 11 skills, Viral Clone Factory).
@@ -41,7 +41,7 @@ Mission:
 - YT-OS v2 (/yt-os): 11 slash skills /rs-viral · /rs-script (21 hooks) · /rs-package · /rs-video · /rs-voice · /rs-thumb · /rs-comments · /rs-plan · /rs-publish · /rs-analytics · /rs-clone — all inside REELSTORM (not external Claude).
 - Account menu (header avatar): Account settings · Change password · Billing · RTC Wallet · Log out. Captain Admin only for locked admin email.
 - Free demo: 1 RTC from SystemBank (4600 RTC pool ≈ 920 × 5-min sets). Free users can analyze/demo; reproduce/vault needs paid RTC.
-- Soft launch: Ollama may power the guide LLM; Stripe test + mock video OK until live DashScope/Seedance/sk_live keys are stamped. Scorecard v1.6.3 tracks the full factory pipeline production-test matrix.
+- Soft launch: Ollama may power the guide LLM; Stripe test + mock video OK until live DashScope/Seedance/sk_live keys are stamped. Scorecard v1.6.4 tracks landing Studio Set layer + full factory pipeline production-test matrix.
 - RTC rule: 1 RTC = 1 minute of finished master (720p). One 5-min ARCHIVE5 set = 5 RTC. Tiers: Free Test $0 (1 RTC demo) · Storm / Storm Pro / Premium Pro via /billing + /wallet. Clone: 1 RTC analyze + 5 RTC reproduce.
 
 Tone: sharp producer, not corporate. Brand colors mentally: violet / cyan / orange on void black.
@@ -502,19 +502,19 @@ export const GUIDE_LAYERS: GuideLayer[] = [
     path: "/scorecard",
     layer: "os",
     title: "Scorecard",
-    blurb: "Production readiness gates (v1.6.3) — full factory pipeline test matrix.",
+    blurb: "Production readiness gates (v1.6.4) — landing Studio Set layer + pipeline matrix.",
     tips: [
-      "v1.6.3: Studio Set · World Builder · Storyboard · Studio · Sound · Archive · Merge marked READY FOR PRODUCTION TESTING.",
-      "RunPod saver-health may still be PARTIAL — soft-launch queues work; real GPU /generate waits on pod URL.",
+      "v1.6.4: Landing hero markets Full Studio Set; factory rooms Storyboard→Merge stay READY FOR PRODUCTION TESTING.",
+      "RunPod saver-health may still be PARTIAL — soft-launch queues work; real GPU /generate waits on pod HTTP 8000.",
       "Target grade A on /api/readiness before academy launch; video_gen + object_storage may still block ship-ready.",
       "Soft launch: Ollama LLM, Stripe test, mock video can PASS with SOFT_LAUNCH=1.",
     ],
     options: [
       { id: "set", label: "Test Studio Set", prompt: "How do I production-test Room · Artist · Imagery from the scorecard status?", href: "/studio-set", kind: "goto" },
+      { id: "land", label: "Landing hero", prompt: "What Studio Set messaging is on the marketing landing hero?", href: "/", kind: "goto" },
       { id: "pipe", label: "Test pipeline", prompt: "Order to production-test Storyboard → Studio → Sound → Archive → Merge.", kind: "do" },
       { id: "gaps", label: "Close gaps", prompt: "Typical readiness gaps and how to close them on soft launch.", kind: "improve" },
       { id: "api", label: "API readiness", prompt: "What does /api/readiness check now vs scorecard pipeline rows?", kind: "learn" },
-      { id: "train", label: "Training checklist", prompt: "Point me to the Training Manual launch checklist page.", href: "/training", kind: "goto" },
     ],
   },
   {

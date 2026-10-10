@@ -50,17 +50,17 @@ export const en: MessageTree = {
   },
   marketing: {
     heroLine:
-      "Cloud factory + Studio on your GPU: paste a viral link, remake transformatively, vault ARCHIVE5 — or generate locally while we meter minutes centrally.",
+      "Lock Room · Artist · Imagery in Full Studio Set, then storyboard, render, vault ARCHIVE5, and merge — cloud factory or Studio on your GPU.",
     ctaForge: "Open YT-OS",
     ctaTraining: "Flip the training guide",
     ctaClone: "Clone a viral link",
-    ctaStudio: "Get Studio",
+    ctaStudio: "Lock Studio Set",
     ctaFactory: "See the factory",
-    pipelineEyebrow: "STORM OS · YT-OS · STUDIO",
+    pipelineEyebrow: "STORM OS · STUDIO SET · ARCHIVE5",
     pipelineTitle: "Idea or viral link.",
-    pipelineTitleMuted: "Cloud or your PC.",
+    pipelineTitleMuted: "Set locked. Master shipped.",
     pipelineBody:
-      "BOT Director, eleven /rs-* skills, Clone Factory, and ReelStorm Studio feed one pipeline — Pixabay intros at $0, ARCHIVE5 vault, or SkyReels on your RTX with central minute control.",
+      "BOT Director and Clone feed Full Studio Set — Room · Artist · Imagery — then Storyboard, STORM render, Sound, ARCHIVE5 vault, and Merge. Pixabay intros at $0; desktop Studio meters minutes on your RTX.",
     forgeEyebrow: "TEMPLATE FORGE + CLONE",
     forgeTitle: "Steal the structure.",
     forgeTitleMuted: "Never the bytes.",
@@ -85,6 +85,12 @@ export const en: MessageTree = {
     studioBody:
       "Desktop app runs SkyReels on your RTX. Hardware-locked license, hourly heartbeat, Stripe MRR — cancel and generation stops. $0 GPU cost to ReelStorm.",
     studioCta: "Download Studio",
+    studioSetEyebrow: "FULL STUDIO SET · ROOM · ARTIST · IMAGERY",
+    studioSetTitle: "Lock the set.",
+    studioSetTitleMuted: "Before a single frame renders.",
+    studioSetBody:
+      "Seed a courtroom or custom world. Generate multi-angle room plates, cast artist angles, and imagery DNA — then Apply to Director so Storyboard and STORM share one locked look.",
+    studioSetCta: "Open Studio Set",
     roomEyebrow: "TEMPLATES ROOM · PIXABAY PRIMARY",
     roomTitle: "Nollywood. Asia.",
     roomTitleMuted: "100 free intros.",
@@ -97,8 +103,8 @@ export const en: MessageTree = {
       "Free 1-RTC cloud demo + Studio Free 5 mins on your PC. YouTubers across Africa and Asia — volume without slop.",
     closeCtaFactory: "Start free demo",
     closeCtaPricing: "View pricing",
-    footerCopy: "© REELSTORM ACADEMY · STORM OS · YT-OS · STUDIO · ARCHIVE5 · AFRICA/ASIA",
-    targetMarkets: "Africa & Asia · Cloud RTC · Studio on your GPU · Pixabay $0 · Clone 1+5",
+    footerCopy: "© REELSTORM ACADEMY · STORM OS · STUDIO SET · YT-OS · ARCHIVE5 · AFRICA/ASIA",
+    targetMarkets: "Africa & Asia · Studio Set lock · Cloud RTC · GPU Studio · Pixabay $0 · Clone 1+5",
   },
   how: {
     eyebrow: "INFOGRAPHIC · FACTORY MAP",

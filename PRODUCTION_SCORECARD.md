@@ -1,17 +1,18 @@
 # REELSTORM ACADEMY OS — Production Build Scorecard
 
-**Version:** v1.6.3 (Full factory pipeline — production-test ready matrix)  
-**Live UI:** `/scorecard` · `/studio-set` · `/world-builder` · `/storyboard` · `/studio` · `/sound-studio` · `/archive-vault` · `/merge-studio`  
+**Version:** v1.6.4 (Landing hero · Studio Set layer + pipeline test matrix)  
+**Live UI:** `/` · `/scorecard` · `/studio-set` · `/world-builder` · `/storyboard` · `/studio` · `/sound-studio` · `/archive-vault` · `/merge-studio`  
 **Artifact view:** [`artifacts/project-scorecard.html`](artifacts/project-scorecard.html) — full scorecard + architecture + system tiers (A/B/C/infra)  
 **API probe:** `GET /api/readiness` → `production1k`  
 **Git:** `Beeplus7/Reelstorm-Academy` `main`  
-**Live deploy:** **LIVE** on `app.reelstorm.uk`  
+**Live deploy:** **LIVE** on `app.reelstorm.uk` / `reelstorm.uk`  
 **Production testing:** Pipeline rooms marked below — soft-launch OK unless noted
 
 ### Pipeline production-test matrix (2026-10-10)
 
 | Surface | Status | Notes |
 |---------|--------|-------|
+| Landing `/` | **READY** | Hero Studio Set layer · Lock Studio Set CTA · pipeline infographic |
 | Studio Set `/studio-set` | **READY** | E2E seed→Apply 100% |
 | World Builder `/world-builder` | **READY** | Soul/Room + deep-link |
 | Storyboard `/storyboard` | **READY** | Needs project **script**; generate+approve E2E |
@@ -19,8 +20,16 @@
 | Sound Studio `/sound-studio` | **READY** | Library + demo bed; ElevenLabs optional |
 | Archive Vault `/archive-vault` | **READY** | List live; split needs uploadId |
 | Merge Studio `/merge-studio` | **READY** | Queue live; needs vault blockIds |
-| `/generate` RunPod saver | **PARTIAL** | saver-health 404 until pod URL green |
+| `/generate` RunPod saver | **PARTIAL** | URL fixed (`4l51`); pod HTTP 8000 still 404 |
 | Ship-ready video/R2 | **BLOCKED** | production1k: object_storage + video_gen |
+
+## Gaps closed in v1.6.4
+
+| Gap | Fix |
+|-----|-----|
+| Marketing hero still said WORLD / GPU only | Hero SET frames · Room·Artist·Imagery copy · CTA → `/studio-set` |
+| Pipeline infographic WORLD stub | Step 02 = **STUDIO SET**; landing Studio Set section |
+| Scorecard silent on marketing surface | Static row `landingHero` pass |
 
 ## Gaps closed in v1.6.3
 

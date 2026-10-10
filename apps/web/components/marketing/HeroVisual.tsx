@@ -1,6 +1,6 @@
 "use client";
 
-/** Full-bleed factory / film-plane visual for the hero — YT-OS + Clone atmosphere */
+/** Full-bleed factory / film-plane visual — Studio Set layer atmosphere */
 export function HeroVisual() {
   return (
     <div className="absolute inset-0 overflow-hidden" aria-hidden>
@@ -34,19 +34,19 @@ export function HeroVisual() {
           className="hero-draw"
         />
 
-        {/* Soft capability marks — not hero clutter; atmospheric only */}
+        {/* Soft capability marks — atmospheric only, not hero clutter */}
         <text x="48" y="120" fill="rgba(0,217,255,0.35)" fontSize="11" fontFamily="monospace" letterSpacing="3">
-          YT-OS · STUDIO · YOUR GPU
+          STUDIO SET · ROOM · ARTIST · IMAGERY
         </text>
         <text x="48" y="142" fill="rgba(255,122,0,0.4)" fontSize="11" fontFamily="monospace" letterSpacing="3">
-          CLONE · PIXABAY · CENTRAL MINUTES
+          STORYBOARD · SOUND · ARCHIVE5 · MERGE
         </text>
 
         {[
           { x: 160, label: "IDEA" },
-          { x: 380, label: "LINK" },
-          { x: 600, label: "DNA" },
-          { x: 820, label: "LOCAL" },
+          { x: 380, label: "SET" },
+          { x: 600, label: "BOARD" },
+          { x: 820, label: "STORM" },
           { x: 1040, label: "VAULT" },
           { x: 1260, label: "MERGE" },
         ].map(({ x, label }, i) => (
@@ -58,8 +58,8 @@ export function HeroVisual() {
               height="90"
               rx="6"
               fill="url(#frameFill)"
-              stroke={i === 3 ? "#FF7A00" : i === 1 ? "#00D9FF" : "rgba(255,255,255,0.12)"}
-              strokeWidth={i === 3 || i === 1 ? 1.5 : 1}
+              stroke={i === 1 ? "#00D9FF" : i === 4 ? "#FF7A00" : "rgba(255,255,255,0.12)"}
+              strokeWidth={i === 1 || i === 4 ? 1.5 : 1}
             />
             <circle cx={x - 58} cy={395 + (i % 2) * 40} r="3" fill="rgba(255,255,255,0.15)" />
             <circle cx={x - 58} cy={455 + (i % 2) * 40} r="3" fill="rgba(255,255,255,0.15)" />

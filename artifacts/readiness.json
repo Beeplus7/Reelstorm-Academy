@@ -1,8 +1,8 @@
 {
   "project": "REELSTORM ACADEMY OS",
-  "version": "v1.6.3",
+  "version": "v1.6.4",
   "updated": "2026-10-10",
-  "git_sha": "9da94cf",
+  "git_sha": "pending",
   "live_ui": "/scorecard",
   "studio_set_ui": "/studio-set",
   "pipeline_ui": [
@@ -15,13 +15,13 @@
   "artifact": "artifacts/project-scorecard.html",
   "api_probe": "GET /api/readiness \u2192 production1k",
   "deploy_status": {
-    "github_main": "pushed",
-    "vps_app_reelstorm_uk": "deployed",
+    "github_main": "pending_push",
+    "vps_app_reelstorm_uk": "pending_deploy",
+    "landing_hero": "studio_set_layer",
     "studio_set_live": "ok",
     "studio_set_code": "production_test_ready",
     "world_builder_live": "ok",
-    "pipeline_code": "production_test_ready",
-    "git_sha_vps": "9da94cf"
+    "pipeline_code": "production_test_ready"
   },
   "architecture": {
     "model": "dual_saver",
@@ -116,6 +116,13 @@
       "area": "Frontend",
       "weight": 6,
       "status": "pass"
+    },
+    {
+      "id": "landingHero",
+      "area": "Brand",
+      "weight": 5,
+      "status": "pass",
+      "detail": "Studio Set layer on landing hero + pipeline"
     },
     {
       "id": "forgeUi",
@@ -215,6 +222,7 @@
     }
   },
   "production_testing": {
+    "landing": "ready",
     "studio_set": "ready",
     "world_builder": "ready",
     "storyboard": "ready",
@@ -224,6 +232,7 @@
     "merge_studio": "ready",
     "runpod_saver": "partial",
     "e2e_verified": "2026-10-10",
-    "note": "soft-launch queues + Studio Set E2E; GPU /generate blocked until saver-health green"
-  }
+    "note": "landing Studio Set layer + soft-launch queues; GPU /generate blocked until saver-health green"
+  },
+  "landing_ui": "/"
 }

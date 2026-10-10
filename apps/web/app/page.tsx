@@ -34,7 +34,7 @@ export default function LandingPage() {
                   {t("marketing.ctaForge")}
                 </Link>
                 <Link
-                  href="/download"
+                  href="/studio-set"
                   className="h-12 md:h-14 px-7 inline-flex items-center rounded-rs border border-cyan/40 text-cyan font-medium text-[14px] md:text-[15px] hover:bg-cyan/10 transition"
                 >
                   {t("marketing.ctaStudio")}
@@ -64,6 +64,65 @@ export default function LandingPage() {
             <p className="mt-4 text-white/55 text-[15px] leading-relaxed">{t("marketing.pipelineBody")}</p>
           </div>
           <PipelineInfographic />
+        </div>
+      </section>
+
+      {/* Full Studio Set */}
+      <section className="relative px-5 md:px-8 py-20 md:py-28 border-t border-white/[0.06] overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#7C3AED]/14 via-transparent to-[#00D9FF]/10" />
+        <div className="relative mx-auto max-w-[1280px] grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+          <div>
+            <div className="mono text-[11px] text-violet-soft mb-3">{t("marketing.studioSetEyebrow")}</div>
+            <h2 className="display text-[clamp(2rem,4.5vw,3.25rem)] leading-[0.95]">
+              {t("marketing.studioSetTitle")}
+              <br />
+              <span className="text-white/40">{t("marketing.studioSetTitleMuted")}</span>
+            </h2>
+            <p className="mt-4 text-white/55 text-[15px] leading-relaxed max-w-[420px]">
+              {t("marketing.studioSetBody")}
+            </p>
+            <Link
+              href="/studio-set"
+              className="mt-8 inline-flex h-12 px-6 items-center rounded-rs bg-violet text-white font-bold text-[14px]"
+            >
+              {t("marketing.studioSetCta")}
+            </Link>
+          </div>
+          <div className="relative aspect-[4/3] rounded-rs-xl border border-white/[0.08] bg-[#0A0A0A] overflow-hidden">
+            <svg viewBox="0 0 480 360" className="w-full h-full" aria-hidden>
+              <rect width="480" height="360" fill="#0A0A0A" />
+              <text x="32" y="40" fill="#C4B5FD" fontSize="11" fontFamily="monospace" letterSpacing="2">
+                FULL STUDIO SET · APPLY TO DIRECTOR
+              </text>
+              {[
+                { y: 70, label: "ROOM — establishing · wide · OSH · close", w: 360, stroke: "#7C3AED" },
+                { y: 120, label: "ARTIST — front · left · right · 3Q", w: 300, stroke: "#00D9FF" },
+                { y: 170, label: "IMAGERY — prompt DNA · refresh plates", w: 320, stroke: "#FF7A00" },
+                { y: 220, label: "READINESS → APPLY TO DIRECTOR", w: 280, stroke: "#C4B5FD" },
+              ].map((row) => (
+                <g key={row.label}>
+                  <rect
+                    x="32"
+                    y={row.y}
+                    width={row.w}
+                    height="36"
+                    rx="8"
+                    fill="#151515"
+                    stroke={row.stroke}
+                  />
+                  <text x="48" y={row.y + 23} fill="rgba(255,255,255,0.78)" fontSize="12" fontFamily="monospace">
+                    {row.label}
+                  </text>
+                </g>
+              ))}
+              <text x="32" y="300" fill="rgba(255,255,255,0.4)" fontSize="11" fontFamily="monospace">
+                THEN STORYBOARD · STUDIO · SOUND · VAULT · MERGE
+              </text>
+              <text x="32" y="330" fill="rgba(255,255,255,0.28)" fontSize="10" fontFamily="monospace">
+                WORLD BUILDER = QUICK SOUL/ROOM STUB
+              </text>
+            </svg>
+          </div>
         </div>
       </section>
 
@@ -382,6 +441,9 @@ export default function LandingPage() {
             </Link>
             <Link href="/yt-os" className="hover:text-white">
               YT-OS
+            </Link>
+            <Link href="/studio-set" className="hover:text-white">
+              Studio Set
             </Link>
             <Link href="/download" className="hover:text-white">
               Studio
