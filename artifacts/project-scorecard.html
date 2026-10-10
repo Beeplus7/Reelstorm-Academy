@@ -412,7 +412,7 @@
 <body>
   <div class="wrap">
     <header class="hero">
-      <div class="eyebrow mono"><i></i> Artifact view · v1.6.2 · Studio Set + World Builder · ready for production testing</div>
+      <div class="eyebrow mono"><i></i> Artifact view · v1.6.5 · R2 CDN videos.reelstorm.uk live · Studio Set ready for production testing</div>
       <h1 class="brand display">REELSTORM</h1>
       <p class="lede">
         Full project scorecard with STORM OS architecture and system-tier model
@@ -630,8 +630,8 @@
     </section>
 
     <footer>
-      <span>REELSTORM ACADEMY · Brand Kit 01 · Production Build Scorecard v1.6.2</span>
-      <span id="updated">Updated 2026-10-09</span>
+      <span>REELSTORM ACADEMY · Brand Kit 01 · Production Build Scorecard v1.6.5</span>
+      <span id="updated">Updated 2026-10-11</span>
     </footer>
   </div>
 
@@ -684,14 +684,15 @@
       ytdlp: { status: "partial", detail: "Install bin/yt-dlp if URL extract required" },
       urlExtract: { status: "partial", detail: "Route mounted; yt-dlp enables full path" },
       disk: { status: "partial", detail: "Target ≥50 GiB free for ~1000 users" },
-      s3: { status: "partial", detail: "Migrate MinIO staging → Cloudflare R2 for 1k" },
+      s3: { status: "partial", detail: "R2 CDN live (videos.reelstorm.uk 200) — VPS S3_* still MinIO until env swap" },
       auth: { status: "pass", detail: "Supabase + Google OAuth path" },
-      llm: { status: "partial", detail: "DashScope key or Ollama fallback" },
+      llm: { status: "pass", detail: "Ollama local active; DashScope optional" },
       prod_stripe: { status: "partial", detail: "Soft launch: test keys OK — swap sk_live_ before real charges" },
-      prod_video_gen: { status: "partial", detail: "MOCK_VIDEO_GEN / Seedance gate" },
+      prod_video_gen: { status: "partial", detail: "RunPod saver REAL/r2_ok; Seedance key + Comfy still open" },
       prod_sound_studio: { status: "pass", detail: "Sound Studio owns voice OS" },
       intro_cache: { status: "partial", detail: "Stock intros R2 cache target ≥100" },
       prod_worker_concurrency: { status: "pass", detail: "WORKER_CONCURRENCY≥8 prod default" },
+      prod_object_storage: { status: "partial", detail: "Public R2 ready; point VPS S3_* at R2 for gate pass" },
     };
 
     function scoreOf(status, weight) {
@@ -835,11 +836,11 @@
           ready: false,
           pct: null,
           grade: null,
-          blocking: ["stripe", "video_gen", "object_storage"],
+          blocking: ["video_gen", "object_storage"],
           webhookUrl: null,
         },
         source: "Embedded baseline",
-        updated: "2026-10-09",
+        updated: "2026-10-11",
       };
 
       const candidates = [
