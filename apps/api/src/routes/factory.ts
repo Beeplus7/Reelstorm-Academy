@@ -14,6 +14,8 @@ export async function worldRoutes(app: FastifyInstance) {
     if (!body.projectId || !body.name) {
       return reply.code(400).send({ error: "projectId and name required" });
     }
+    const project = await prisma.project.findUnique({ where: { id: body.projectId } });
+    if (!project) return reply.code(404).send({ error: "Project not found" });
     const soul = await prisma.soulIdentity.create({
       data: {
         projectId: body.projectId,
@@ -43,6 +45,8 @@ export async function worldRoutes(app: FastifyInstance) {
     if (!body.projectId || !body.name) {
       return reply.code(400).send({ error: "projectId and name required" });
     }
+    const project = await prisma.project.findUnique({ where: { id: body.projectId } });
+    if (!project) return reply.code(404).send({ error: "Project not found" });
     const room = await prisma.roomPlate.create({
       data: {
         projectId: body.projectId,
@@ -54,6 +58,10 @@ export async function worldRoutes(app: FastifyInstance) {
         lut: body.lut,
         lightingLocked: true,
       },
+    });
+    await prisma.project.update({
+      where: { id: body.projectId },
+      data: { status: "WORLD_BUILDING" },
     });
     return reply.code(201).send({ room });
   });

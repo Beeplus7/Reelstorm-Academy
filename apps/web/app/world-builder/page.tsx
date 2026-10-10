@@ -9,32 +9,49 @@ export default function WorldBuilderPage() {
   const [name, setName] = useState("Lead");
   const [room, setRoom] = useState("Perfect Room");
   const [msg, setMsg] = useState("");
+  const [busy, setBusy] = useState(false);
 
   async function lockSoul() {
-    if (!projectId) return setMsg("Project ID required");
-    const { soul } = await api<{ soul: { id: string; faceHash: string } }>("/api/world-builder/soul", {
-      method: "POST",
-      body: JSON.stringify({
-        projectId,
-        name,
-        faceHash: `soul_${Date.now()}`,
-        angles: { front: "pending", left: "pending", right: "pending", threeQuarter: "pending" },
-      }),
-    });
-    setMsg(`Soul ID locked: ${soul.faceHash}`);
+    if (!projectId.trim()) return setMsg("Project ID required");
+    setBusy(true);
+    setMsg("");
+    try {
+      const { soul } = await api<{ soul: { id: string; faceHash: string } }>("/api/world-builder/soul", {
+        method: "POST",
+        body: JSON.stringify({
+          projectId: projectId.trim(),
+          name,
+          faceHash: `soul_${Date.now()}`,
+          angles: { front: "pending", left: "pending", right: "pending", threeQuarter: "pending" },
+        }),
+      });
+      setMsg(`Soul ID locked: ${soul.faceHash}`);
+    } catch (e) {
+      setMsg((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function lockRoom() {
-    if (!projectId) return setMsg("Project ID required");
-    const { room: r } = await api<{ room: { id: string } }>("/api/world-builder/room", {
-      method: "POST",
-      body: JSON.stringify({
-        projectId,
-        name: room,
-        plates: { wide: "pending", medium: "pending", overShoulder: "pending", close: "pending" },
-      }),
-    });
-    setMsg(`Room Memory locked: ${r.id}`);
+    if (!projectId.trim()) return setMsg("Project ID required");
+    setBusy(true);
+    setMsg("");
+    try {
+      const { room: r } = await api<{ room: { id: string } }>("/api/world-builder/room", {
+        method: "POST",
+        body: JSON.stringify({
+          projectId: projectId.trim(),
+          name: room,
+          plates: { wide: "pending", medium: "pending", overShoulder: "pending", close: "pending" },
+        }),
+      });
+      setMsg(`Room Memory locked: ${r.id}`);
+    } catch (e) {
+      setMsg((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -49,6 +66,11 @@ export default function WorldBuilderPage() {
           </Link>{" "}
           for multi-angle courtroom packs, artist import from URL, prompt imagery, and AI camera guide.
         </p>
+      </div>
+
+      <div className="rounded-rs-xl border border-orange/30 bg-orange/10 px-4 py-3 text-sm text-white/75">
+        <span className="mono text-[10px] text-orange mr-2">READY FOR PRODUCTION TESTING</span>
+        Quick Soul + Room lock verified live. For full Room · Artist · Imagery production lock, use Studio Set.
       </div>
 
       <div className="rounded-rs-xl border border-cyan/25 bg-cyan/5 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -91,7 +113,12 @@ export default function WorldBuilderPage() {
                 </div>
               ))}
             </div>
-            <button onClick={lockSoul} className="mt-4 w-full h-10 rounded-rs bg-violet text-white font-bold text-sm">
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void lockSoul()}
+              className="mt-4 w-full h-10 rounded-rs bg-violet text-white font-bold text-sm disabled:opacity-40"
+            >
               Lock Soul ID
             </button>
           </div>
@@ -109,7 +136,12 @@ export default function WorldBuilderPage() {
                 </div>
               ))}
             </div>
-            <button onClick={lockRoom} className="mt-4 w-full h-10 rounded-rs bg-cyan text-black font-bold text-sm">
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void lockRoom()}
+              className="mt-4 w-full h-10 rounded-rs bg-cyan text-black font-bold text-sm disabled:opacity-40"
+            >
               Lock Room Plates
             </button>
           </div>

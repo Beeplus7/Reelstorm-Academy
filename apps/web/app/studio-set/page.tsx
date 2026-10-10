@@ -327,6 +327,12 @@ export default function StudioSetPage() {
 
   return (
     <div className="max-w-[1100px] space-y-8 forge-in">
+      <div className="rounded-rs-xl border border-orange/30 bg-orange/10 px-4 py-3 text-sm text-white/75">
+        <span className="mono text-[10px] text-orange mr-2">READY FOR PRODUCTION TESTING</span>
+        Live API E2E verified (seed → plates → imagery → Apply to Director). Plates are soft-launch
+        SVG/URL stamps until real still gen — flow + readiness are testable now.
+      </div>
+
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
           <div className="mono text-[11px] text-cyan mb-2">FULL STUDIO SET // ROOM · ARTIST · IMAGERY</div>

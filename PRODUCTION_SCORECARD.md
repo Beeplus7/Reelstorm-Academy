@@ -1,11 +1,20 @@
 # REELSTORM ACADEMY OS — Production Build Scorecard
 
-**Version:** v1.6.1 (Studio Set soft-launch harden)  
-**Live UI:** `/scorecard` · `/studio-set`  
+**Version:** v1.6.2 (Studio Set + World Builder — ready for production testing)  
+**Live UI:** `/scorecard` · `/studio-set` · `/world-builder`  
 **Artifact view:** [`artifacts/project-scorecard.html`](artifacts/project-scorecard.html) — full scorecard + architecture + system tiers (A/B/C/infra)  
 **API probe:** `GET /api/readiness` → `production1k`  
-**Git:** `Beeplus7/Reelstorm-Academy` `main` @ `11f52de`  
-**Live deploy:** **LIVE** on `app.reelstorm.uk` @ `11f52de` (VPS deploy + nginx `/api/` proxy restored)
+**Git:** `Beeplus7/Reelstorm-Academy` `main`  
+**Live deploy:** **LIVE** on `app.reelstorm.uk`  
+**Production testing:** **READY** — live E2E verified 2026-10-10 (seed → plates → imagery → Apply; World Builder soul/room)
+
+## Gaps closed in v1.6.2
+
+| Gap | Fix |
+|-----|-----|
+| Studio Set / World Builder untested on live | Live E2E on `app.reelstorm.uk` — Courtroom seed 100% ready → Apply to Director |
+| World Builder 500 on bad projectId | API returns 404; UI try/catch + busy states |
+| Scorecard overstated / understated deploy | Scorecard marks both surfaces **READY FOR PRODUCTION TESTING** (soft-launch plates) |
 
 ## Gaps closed in v1.6.1
 
@@ -28,7 +37,17 @@
 
 ## Soft-launch note (Studio Set)
 
-Plates are SVG / URL-stamped placeholders until real still gen (RunPod / Comfy). Flow-test ready **after deploy**; not ship-ready imagery.
+Plates are SVG / URL-stamped placeholders until real still gen (RunPod / Comfy).  
+**Ready for production testing** of the lock flow + readiness + Apply to Director.  
+**Not** ship-ready photoreal imagery yet.
+
+### Manual test checklist
+
+1. Create project → copy ID  
+2. `/studio-set` → Load / Seed Courtroom → readiness green  
+3. Artist Generate · Imagery save (refreshes rooms)  
+4. Apply to Director (or Force soft launch)  
+5. Optional: `/world-builder` quick Soul/Room, then Open Studio Set
 
 ## Gaps closed in v1.5
 

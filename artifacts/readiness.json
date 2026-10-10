@@ -1,18 +1,18 @@
 {
   "project": "REELSTORM ACADEMY OS",
-  "version": "v1.6.1",
-  "updated": "2026-10-09",
+  "version": "v1.6.2",
+  "updated": "2026-10-10",
   "git_sha": "11f52de",
   "live_ui": "/scorecard",
   "studio_set_ui": "/studio-set",
   "artifact": "artifacts/project-scorecard.html",
   "api_probe": "GET /api/readiness \u2192 production1k",
   "deploy_status": {
-    "github_main": "pushed",
-    "vps_app_reelstorm_uk": "deployed",
+    "github_main": "pending_push",
+    "vps_app_reelstorm_uk": "pending_redeploy",
     "studio_set_live": "ok",
-    "studio_set_code": "soft_launch_ready",
-    "git_sha_vps": "11f52de"
+    "studio_set_code": "production_test_ready",
+    "world_builder_live": "ok"
   },
   "architecture": {
     "model": "dual_saver",
@@ -119,14 +119,21 @@
       "area": "Studio Set",
       "weight": 8,
       "status": "pass",
-      "detail": "live /studio-set · soft-launch plates"
+      "detail": "READY FOR PRODUCTION TESTING \u00b7 E2E live"
     },
     {
       "id": "imageryStudio",
       "area": "Studio Set",
       "weight": 5,
       "status": "pass",
-      "detail": "artist generate + imagery upsert · live"
+      "detail": "E2E live \u00b7 soft-launch plates"
+    },
+    {
+      "id": "worldBuilder",
+      "area": "Studio Set",
+      "weight": 4,
+      "status": "pass",
+      "detail": "READY FOR PRODUCTION TESTING \u00b7 /world-builder"
     },
     {
       "id": "onboard",
@@ -162,5 +169,11 @@
       "min": 0,
       "label": "BLOCKED"
     }
+  },
+  "production_testing": {
+    "studio_set": "ready",
+    "world_builder": "ready",
+    "e2e_verified": "2026-10-10",
+    "note": "soft-launch plates; flow + Apply to Director verified live"
   }
 }
