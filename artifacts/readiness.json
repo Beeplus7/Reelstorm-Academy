@@ -2,7 +2,7 @@
   "project": "REELSTORM ACADEMY OS",
   "version": "v1.6.3",
   "updated": "2026-10-10",
-  "git_sha": "pending",
+  "git_sha": "7fbbfc6",
   "live_ui": "/scorecard",
   "studio_set_ui": "/studio-set",
   "pipeline_ui": [
@@ -13,10 +13,10 @@
     "/merge-studio"
   ],
   "artifact": "artifacts/project-scorecard.html",
-  "api_probe": "GET /api/readiness → production1k",
+  "api_probe": "GET /api/readiness \u2192 production1k",
   "deploy_status": {
-    "github_main": "pending_push",
-    "vps_app_reelstorm_uk": "pending_deploy",
+    "github_main": "pushed",
+    "vps_app_reelstorm_uk": "deploying",
     "studio_set_live": "ok",
     "studio_set_code": "production_test_ready",
     "world_builder_live": "ok",
@@ -35,9 +35,9 @@
       }
     },
     "planes": {
-      "control": "VPS /opt/reelstorm-os · Fastify + Next + BullMQ",
-      "studio_set": "Room · Artist · Imagery · AI Guide · Apply to Director",
-      "compute": "RunPod xuvnute4l51iog · RTX 4090 · SkyReels 4.2GB",
+      "control": "VPS /opt/reelstorm-os \u00b7 Fastify + Next + BullMQ",
+      "studio_set": "Room \u00b7 Artist \u00b7 Imagery \u00b7 AI Guide \u00b7 Apply to Director",
+      "compute": "RunPod xuvnute4l51iog \u00b7 RTX 4090 \u00b7 SkyReels 4.2GB",
       "storage": "Cloudflare R2 reelstorm-videos + Supabase + Redis db17"
     },
     "pipeline": [
@@ -127,21 +127,21 @@
       "area": "Studio Set",
       "weight": 8,
       "status": "pass",
-      "detail": "READY FOR PRODUCTION TESTING · E2E live"
+      "detail": "READY FOR PRODUCTION TESTING \u00b7 E2E live"
     },
     {
       "id": "imageryStudio",
       "area": "Studio Set",
       "weight": 5,
       "status": "pass",
-      "detail": "E2E live · soft-launch plates"
+      "detail": "E2E live \u00b7 soft-launch plates"
     },
     {
       "id": "worldBuilder",
       "area": "Studio Set",
       "weight": 4,
       "status": "pass",
-      "detail": "READY FOR PRODUCTION TESTING · /world-builder"
+      "detail": "READY FOR PRODUCTION TESTING \u00b7 /world-builder"
     },
     {
       "id": "storyboard",
@@ -155,14 +155,14 @@
       "area": "Pipeline",
       "weight": 5,
       "status": "pass",
-      "detail": "READY FOR PRODUCTION TESTING · BullMQ"
+      "detail": "READY FOR PRODUCTION TESTING \u00b7 BullMQ"
     },
     {
       "id": "soundStudio",
       "area": "Pipeline",
       "weight": 5,
       "status": "pass",
-      "detail": "READY FOR PRODUCTION TESTING · ElevenLabs optional"
+      "detail": "READY FOR PRODUCTION TESTING \u00b7 ElevenLabs optional"
     },
     {
       "id": "archiveMerge",
