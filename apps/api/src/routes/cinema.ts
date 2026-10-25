@@ -853,6 +853,8 @@ export async function cinemaRoutes(app: FastifyInstance) {
       skipRtc?: boolean;
       /** Keep Meta AI / imported clips; only generate missing shots */
       preserveImports?: boolean;
+      /** Optional still ids to render; others left unchanged */
+      onlyStillIds?: string[];
     };
     const season = await prisma.cinemaSeason.findUnique({ where: { id } });
     if (!season) return reply.code(404).send({ error: "not found" });
@@ -923,6 +925,7 @@ export async function cinemaRoutes(app: FastifyInstance) {
 
     let heygenUsed = 0;
     for (const still of ep.stills) {
+      if (body.onlyStillIds?.length && !body.onlyStillIds.includes(still.id)) continue;
       const clip = ep.clips.find((c) => c.stillId === still.id) || {
         stillId: still.id,
         status: "pending" as const,
