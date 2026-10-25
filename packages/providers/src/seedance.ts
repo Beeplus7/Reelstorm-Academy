@@ -30,6 +30,9 @@ export async function generateWithSeedance(req: VideoGenRequest): Promise<VideoG
   const createUrl =
     process.env.SEEDANCE_API_URL ||
     `${dashBase()}/services/aigc/video-generation/video-synthesis`;
+  const model =
+    process.env.SEEDANCE_MODEL ||
+    (req.firstFrameUrl ? "wanx2.1-i2v-plus" : "wan2.1-t2v-turbo");
   const res = await fetch(createUrl, {
     method: "POST",
     headers: {
@@ -38,13 +41,13 @@ export async function generateWithSeedance(req: VideoGenRequest): Promise<VideoG
       "X-DashScope-Async": "enable",
     },
     body: JSON.stringify({
-      model: process.env.SEEDANCE_MODEL || "wan2.1-t2v-turbo",
+      model,
       input: {
         prompt: req.prompt,
         ...(req.firstFrameUrl ? { img_url: req.firstFrameUrl } : {}),
       },
       parameters: {
-        duration: req.durationSec || 5,
+        duration: Math.min(req.durationSec || 5, 10),
         aspect_ratio: req.aspectRatio || "9:16",
       },
     }),
