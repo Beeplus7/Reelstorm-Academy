@@ -17,6 +17,12 @@ export type CinemaStageId = (typeof CINEMA_STAGES)[number]["id"];
 
 export const DRAMA_SPINES = [
   {
+    id: "social_correction_court",
+    title: "Social Correction Court",
+    loglineSeed:
+      "Judge George and a jury debate real social cases so the audience learns — comedy with courtroom stakes.",
+  },
+  {
     id: "revenge",
     title: "Revenge",
     loglineSeed: "She was erased from the family empire — tonight she walks back in with proof.",
@@ -50,6 +56,8 @@ export type CharacterLock = {
   name: string;
   role: "lead_a" | "lead_b" | "antagonist" | "support";
   faceUrl?: string;
+  /** Optional multi-angle refs (front / threeQuarter / entrance) */
+  angleUrls?: { front?: string; threeQuarter?: string; entrance?: string };
   avatarId?: string;
   voiceId?: string;
   wardrobeDay0?: string;
@@ -60,6 +68,8 @@ export type WorldLock = {
   id: string;
   name: string;
   description: string;
+  /** Semantic plate key: entrance_hall | court_wide | bench | from_bench */
+  plateKey?: string;
   plateUrl?: string;
   locked: boolean;
 };
@@ -137,14 +147,151 @@ export type CinemaSeasonRecord = {
   updatedAt?: string;
 };
 
+/** Social Correction Comedy Court — Judge George + Afro-Baroque court. */
+export function buildSocialCorrectionCourtSeason(opts?: {
+  title?: string;
+  logline?: string;
+}): SeasonBible {
+  const spine = DRAMA_SPINES.find((s) => s.id === "social_correction_court")!;
+  const title = opts?.title || "Social Correction Court";
+  const logline = opts?.logline || spine.loglineSeed;
+
+  const characters: CharacterLock[] = [
+    {
+      id: "char_judge_george",
+      name: "Judge George",
+      role: "lead_a",
+      wardrobeDay0:
+        "burgundy velvet judicial robe, Kente stole, cowrie-shell crown/gele, white tabs, gold necklace",
+      locked: false,
+    },
+    // Jury Foreperson added later when a face still is uploaded (Cast → Add)
+  ];
+
+  const worlds: WorldLock[] = [
+    {
+      id: "world_entrance_hall",
+      name: "Palace Entrance Hall",
+      plateKey: "entrance_hall",
+      description:
+        "Red carpet marble hall, carved African pillars, bronze busts, open dark-wood doors with golden crest, chandelier glow beyond",
+      locked: false,
+    },
+    {
+      id: "world_court_wide",
+      name: "Social Correction Court — Wide",
+      plateKey: "court_wide",
+      description:
+        "Afro-Baroque courtroom, black-white checkered marble, crystal chandelier, African masks, Kente on gallery, green counsel desks",
+      locked: false,
+    },
+    {
+      id: "world_bench",
+      name: "Judge Bench Hero",
+      plateKey: "bench",
+      description:
+        "Burgundy gold throne bench, cowrie/gold gavel on marble table, counsel desks foreground, god-ray windows",
+      locked: false,
+    },
+    {
+      id: "world_from_bench",
+      name: "Court From the Bench",
+      plateKey: "from_bench",
+      description:
+        "View from Judge George’s bench toward counsel and Kente jury gallery, checkered floor, masks on walls",
+      locked: false,
+    },
+  ];
+
+  const stills: BoardStill[] = [
+    {
+      id: "ep1_s01",
+      episodeIndex: 1,
+      shotIndex: 1,
+      characterId: "char_judge_george",
+      worldId: "world_entrance_hall",
+      prompt:
+        "Vertical cinematic: Judge George walking red-carpet entrance hall toward open court doors, burgundy Kente robes, cowrie crown, god rays, photoreal 9:16",
+      dialogue: undefined,
+      framing: "wide",
+      durationSec: 6,
+      approved: false,
+    },
+    {
+      id: "ep1_s02",
+      episodeIndex: 1,
+      shotIndex: 2,
+      worldId: "world_court_wide",
+      prompt:
+        "Vertical cinematic: full Social Correction Court standing assembly awaiting the Judge, checkered marble, chandelier, African masks, photoreal 9:16",
+      framing: "wide",
+      durationSec: 5,
+      approved: false,
+    },
+    {
+      id: "ep1_s03",
+      episodeIndex: 1,
+      shotIndex: 3,
+      characterId: "char_judge_george",
+      worldId: "world_bench",
+      prompt:
+        "Vertical cinematic: Judge George seated at burgundy gold bench, cowrie gavel on marble, stern educational presence, photoreal 9:16",
+      dialogue: "Court is in session. Today's social case will teach us all.",
+      framing: "medium",
+      durationSec: 7,
+      approved: false,
+    },
+    {
+      id: "ep1_s04",
+      episodeIndex: 1,
+      shotIndex: 4,
+      worldId: "world_bench",
+      prompt:
+        "Vertical cinematic insert: cowrie-shell gold gavel striking marble block, cliffhanger cut, Social Correction Court, photoreal 9:16",
+      framing: "close",
+      durationSec: 4,
+      approved: false,
+    },
+  ];
+
+  const episode: CinemaEpisode = {
+    index: 1,
+    title: "Court Is in Session",
+    synopsis: `${logline} Episode 1 cold-open: entrance → assembly → bench → gavel hook.`,
+    cliffhanger: "The first social case folder opens — and the accused is someone the audience already knows.",
+    targetSec: 75,
+    stills,
+    clips: stills.map((s) => ({ stillId: s.id, status: "pending" as const })),
+    status: "draft",
+  };
+
+  return {
+    title,
+    spine: spine.id,
+    logline,
+    tone: "social correction comedy · Afro-Baroque court drama",
+    aspectRatio: "9:16",
+    episodeCount: 12,
+    characters,
+    worlds,
+    episodes: [episode],
+    stage: "idea",
+  };
+}
+
 /** Build a production-ready first episode bible for vertical drama. */
 export function buildPilotSeason(opts: {
   spineId?: string;
   title?: string;
   logline?: string;
 }): SeasonBible {
+  if (opts.spineId === "social_correction_court" || (!opts.spineId && opts.title?.toLowerCase().includes("social correction"))) {
+    return buildSocialCorrectionCourtSeason({ title: opts.title, logline: opts.logline });
+  }
   const spine =
-    DRAMA_SPINES.find((s) => s.id === opts.spineId) || DRAMA_SPINES[0];
+    DRAMA_SPINES.find((s) => s.id === opts.spineId) ||
+    DRAMA_SPINES.find((s) => s.id === "revenge") ||
+    DRAMA_SPINES[1];
   const title = opts.title || `Night of Proof · ${spine.title}`;
   const logline = opts.logline || spine.loglineSeed;
 

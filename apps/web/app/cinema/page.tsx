@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import clsx from "clsx";
-import { api } from "@/lib/api";
+import { api, getApiBase } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 
 type Progress = {
@@ -29,8 +29,16 @@ type Bible = {
     voiceId?: string;
     locked: boolean;
     wardrobeDay0?: string;
+    angleUrls?: { front?: string; threeQuarter?: string; entrance?: string };
   }>;
-  worlds: Array<{ id: string; name: string; description: string; plateUrl?: string; locked: boolean }>;
+  worlds: Array<{
+    id: string;
+    name: string;
+    description: string;
+    plateKey?: string;
+    plateUrl?: string;
+    locked: boolean;
+  }>;
   episodes: Array<{
     index: number;
     title: string;
@@ -52,13 +60,36 @@ type Bible = {
 };
 
 const STEPS = [
-  { id: "cast", label: "Cast", href: "cast" },
-  { id: "world", label: "World", href: "world" },
-  { id: "voice", label: "Voice", href: "voice" },
-  { id: "board", label: "Board", href: "board" },
-  { id: "shoot", label: "Shoot", href: "shoot" },
-  { id: "cut", label: "Cut", href: "cut" },
+  { id: "cast", label: "Cast" },
+  { id: "world", label: "World" },
+  { id: "voice", label: "Voice" },
+  { id: "board", label: "Board" },
+  { id: "shoot", label: "Shoot" },
+  { id: "cut", label: "Cut" },
 ] as const;
+
+const WORLD_PLATE_LABELS: Record<string, string> = {
+  entrance_hall: "Entrance hall",
+  court_wide: "Court wide",
+  bench: "Bench hero",
+  from_bench: "From the bench",
+};
+
+async function uploadCinemaAsset(file: File, kind: string, label: string) {
+  const fd = new FormData();
+  fd.append("image", file);
+  fd.append("kind", kind);
+  fd.append("label", label);
+  const token = typeof window !== "undefined" ? localStorage.getItem("rs_access_token") : null;
+  const res = await fetch(`${getApiBase()}/api/cinema/assets/upload`, {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: fd,
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data?.error || `Upload failed ${res.status}`);
+  return data as { url: string };
+}
 
 export default function CinemaPage() {
   useAuth();
@@ -70,6 +101,9 @@ export default function CinemaPage() {
   const [masterUrl, setMasterUrl] = useState<string | null>(null);
   const [continuity, setContinuity] = useState<{ pass: boolean; issues: string[] } | null>(null);
   const [rtcInfo, setRtcInfo] = useState<{ shoot: number; cut: number } | null>(null);
+  const [judgeFaceUrl, setJudgeFaceUrl] = useState<string | null>(null);
+  const [judgeEntranceUrl, setJudgeEntranceUrl] = useState<string | null>(null);
+  const [worldPlates, setWorldPlates] = useState<Record<string, string>>({});
 
   const refresh = useCallback(async (id: string) => {
     const data = await api<{
@@ -83,15 +117,24 @@ export default function CinemaPage() {
     setContinuity(data.continuity || null);
     setRtcInfo(data.rtc || null);
     setMasterUrl(data.bible.episodes?.[0]?.masterUrl || null);
+    const judge = data.bible.characters.find((c) => c.id === "char_judge_george" || c.role === "lead_a");
+    if (judge?.faceUrl) setJudgeFaceUrl(judge.faceUrl);
+    if (judge?.angleUrls?.entrance) setJudgeEntranceUrl(judge.angleUrls.entrance);
+    const plates: Record<string, string> = {};
+    for (const w of data.bible.worlds) {
+      if (w.plateKey && w.plateUrl) plates[w.plateKey] = w.plateUrl;
+    }
+    if (Object.keys(plates).length) setWorldPlates(plates);
   }, []);
 
   useEffect(() => {
     (async () => {
       try {
-        const list = await api<{ seasons: Array<{ id: string }> }>("/api/cinema/seasons");
-        if (list.seasons?.[0]) {
-          setSeasonId(list.seasons[0].id);
-          await refresh(list.seasons[0].id);
+        const list = await api<{ seasons: Array<{ id: string; spine?: string }> }>("/api/cinema/seasons");
+        const court = list.seasons?.find((s) => s.spine === "social_correction_court") || list.seasons?.[0];
+        if (court) {
+          setSeasonId(court.id);
+          await refresh(court.id);
         }
       } catch {
         /* empty */
@@ -99,7 +142,7 @@ export default function CinemaPage() {
     })();
   }, [refresh]);
 
-  async function createPilot() {
+  async function createCourt() {
     setBusy(true);
     setMsg(null);
     try {
@@ -108,15 +151,19 @@ export default function CinemaPage() {
         {
           method: "POST",
           body: JSON.stringify({
-            spineId: "revenge",
-            title: "Night of Proof",
+            template: "social_correction_court",
+            spineId: "social_correction_court",
+            title: "Social Correction Court",
           }),
         },
       );
       setSeasonId(data.season.id);
       setBible(data.bible);
       setProgress(data.progress);
-      setMsg("Season created — lock Cast → World → Voice, approve Board, then Shoot.");
+      setJudgeFaceUrl(null);
+      setJudgeEntranceUrl(null);
+      setWorldPlates({});
+      setMsg("Social Correction Court created — upload Judge George + court plates, then Lock Cast/World.");
     } catch (e) {
       setMsg(e instanceof Error ? e.message : String(e));
     } finally {
@@ -124,20 +171,114 @@ export default function CinemaPage() {
     }
   }
 
-  async function lock(kind: "cast" | "world" | "voice") {
+  async function onJudgeUpload(file: File | null, which: "face" | "entrance") {
+    if (!file) return;
+    setBusy(true);
+    try {
+      const { url } = await uploadCinemaAsset(file, "cast", which === "face" ? "judge_george" : "judge_entrance");
+      if (which === "face") setJudgeFaceUrl(url);
+      else setJudgeEntranceUrl(url);
+      setMsg(`Uploaded Judge ${which}`);
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function onWorldUpload(file: File | null, plateKey: string) {
+    if (!file) return;
+    setBusy(true);
+    try {
+      const { url } = await uploadCinemaAsset(file, "world", plateKey);
+      setWorldPlates((p) => ({ ...p, [plateKey]: url }));
+      setMsg(`Uploaded plate · ${WORLD_PLATE_LABELS[plateKey] || plateKey}`);
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function lockCast() {
     if (!seasonId) return;
     setBusy(true);
     setMsg(null);
+    try {
+      const leadId = bible?.characters.find((c) => c.role === "lead_a")?.id || "char_judge_george";
+      const data = await api<{
+        bible: Bible;
+        progress: Progress;
+        continuity?: { pass: boolean; issues: string[] };
+      }>(`/api/cinema/seasons/${seasonId}/cast/lock`, {
+        method: "POST",
+        body: JSON.stringify({
+          characters: [
+            {
+              id: leadId,
+              name: "Judge George",
+              faceUrl: judgeFaceUrl || undefined,
+              angleUrls: {
+                front: judgeFaceUrl || undefined,
+                entrance: judgeEntranceUrl || undefined,
+              },
+            },
+          ],
+        }),
+      });
+      setBible(data.bible);
+      setProgress(data.progress);
+      setContinuity(data.continuity || null);
+      setMsg("Cast locked · Judge George");
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function lockWorld() {
+    if (!seasonId) return;
+    setBusy(true);
+    setMsg(null);
+    try {
+      const worlds = (bible?.worlds || []).map((w) => ({
+        id: w.id,
+        plateKey: w.plateKey,
+        plateUrl: (w.plateKey && worldPlates[w.plateKey]) || w.plateUrl,
+      }));
+      const data = await api<{
+        bible: Bible;
+        progress: Progress;
+        continuity?: { pass: boolean; issues: string[] };
+      }>(`/api/cinema/seasons/${seasonId}/world/lock`, {
+        method: "POST",
+        body: JSON.stringify({ worlds }),
+      });
+      setBible(data.bible);
+      setProgress(data.progress);
+      setContinuity(data.continuity || null);
+      setMsg("World locked · court plates");
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function lock(kind: "voice") {
+    if (!seasonId) return;
+    setBusy(true);
     try {
       const data = await api<{
         bible: Bible;
         progress: Progress;
         continuity?: { pass: boolean; issues: string[] };
-      }>(`/api/cinema/seasons/${seasonId}/${kind}/lock`, { method: "POST", body: "{}" });
+      }>(`/api/cinema/seasons/${seasonId}/voice/lock`, { method: "POST", body: "{}" });
       setBible(data.bible);
       setProgress(data.progress);
       setContinuity(data.continuity || null);
-      setMsg(`${kind} locked`);
+      setMsg("Voice locked");
     } catch (e) {
       setMsg(e instanceof Error ? e.message : String(e));
     } finally {
@@ -160,7 +301,7 @@ export default function CinemaPage() {
       setBible(data.bible);
       setProgress(data.progress);
       setMsg(
-        `All stills approved — shoot unlocked${data.rtcRequiredToShoot ? ` · ${data.rtcRequiredToShoot} RTC` : ""}`,
+        `Board approved${data.rtcRequiredToShoot ? ` · ${data.rtcRequiredToShoot} RTC to shoot` : ""}`,
       );
     } catch (e) {
       setMsg(e instanceof Error ? e.message : String(e));
@@ -172,7 +313,7 @@ export default function CinemaPage() {
   async function shoot() {
     if (!seasonId) return;
     setBusy(true);
-    setMsg("Shooting episode (HeyGen dialogue + Ken Burns inserts)…");
+    setMsg("Shooting cold-open…");
     try {
       const data = await api<{
         bible: Bible;
@@ -187,7 +328,7 @@ export default function CinemaPage() {
       setProgress(data.progress);
       setContinuity(data.continuity || null);
       setMsg(
-        `Shoot done · ${data.shotSummary?.ready}/${data.shotSummary?.total} ready · QC ${data.shotSummary?.qcPass ?? "—"} · RTC ${data.shotSummary?.rtcCharged ?? 0}`,
+        `Shoot · ${data.shotSummary?.ready}/${data.shotSummary?.total} · QC ${data.shotSummary?.qcPass ?? "—"}`,
       );
     } catch (e) {
       setMsg(e instanceof Error ? e.message : String(e));
@@ -199,7 +340,6 @@ export default function CinemaPage() {
   async function cut() {
     if (!seasonId) return;
     setBusy(true);
-    setMsg("Assembling master…");
     try {
       const data = await api<{ bible: Bible; progress: Progress; masterUrl: string; cliffhanger: string }>(
         `/api/cinema/seasons/${seasonId}/cut`,
@@ -208,29 +348,7 @@ export default function CinemaPage() {
       setBible(data.bible);
       setProgress(data.progress);
       setMasterUrl(data.masterUrl);
-      setMsg(`Master shipped · cliffhanger: ${data.cliffhanger}`);
-    } catch (e) {
-      setMsg(e instanceof Error ? e.message : String(e));
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function runFullPilot() {
-    setBusy(true);
-    setMsg("Running full pilot pipeline…");
-    try {
-      const data = await api<{
-        seasonId: string;
-        cut: { masterUrl?: string; cliffhanger?: string };
-      }>("/api/cinema/pilot", {
-        method: "POST",
-        body: JSON.stringify({ spineId: "revenge", title: "Night of Proof", quick: false }),
-      });
-      setSeasonId(data.seasonId);
-      await refresh(data.seasonId);
-      setMasterUrl(data.cut?.masterUrl || null);
-      setMsg(`Pilot complete · ${data.cut?.cliffhanger || "shipped"}`);
+      setMsg(`Master · ${data.cliffhanger}`);
     } catch (e) {
       setMsg(e instanceof Error ? e.message : String(e));
     } finally {
@@ -239,48 +357,33 @@ export default function CinemaPage() {
   }
 
   const ep = bible?.episodes?.[0];
+  const plateKeysFromBible = (bible?.worlds || [])
+    .map((w) => w.plateKey)
+    .filter((k): k is string => Boolean(k));
+  const plateKeys =
+    plateKeysFromBible.length > 0
+      ? plateKeysFromBible
+      : ["entrance_hall", "court_wide", "bench", "from_bench"];
 
   return (
     <div className="p-6 lg:p-8 max-w-6xl mx-auto space-y-6">
       <header className="space-y-2">
-        <div className="mono text-[10px] text-cyan tracking-[0.16em]">CINEMA MODE · SAGA HYBRID</div>
+        <div className="mono text-[10px] text-cyan tracking-[0.16em]">CINEMA · SOCIAL CORRECTION COURT</div>
         <h1 className="display text-3xl md:text-4xl">REELSTORM CINEMA</h1>
         <p className="text-white/60 text-sm max-w-2xl">
-          Four studios only: Cast · World · Voice · Cut. Showrunner absorbs BOT Director. Approve
-          storyboard before any shoot spend.
+          Lock Judge George + Afro-Baroque court from your stills. Cast · World · Voice · Board · Shoot · Cut.
         </p>
       </header>
 
       <div className="flex flex-wrap gap-2">
-        {!seasonId ? (
-          <>
-            <button
-              type="button"
-              disabled={busy}
-              onClick={createPilot}
-              className="px-4 py-2.5 rounded-rs bg-violet/90 hover:bg-violet text-sm font-semibold"
-            >
-              New revenge drama
-            </button>
-            <button
-              type="button"
-              disabled={busy}
-              onClick={runFullPilot}
-              className="px-4 py-2.5 rounded-rs bg-cyan/20 border border-cyan/40 text-cyan text-sm font-semibold"
-            >
-              Ship first pilot (auto)
-            </button>
-          </>
-        ) : (
-          <button
-            type="button"
-            disabled={busy}
-            onClick={runFullPilot}
-            className="px-4 py-2.5 rounded-rs bg-orange/20 border border-orange/40 text-orange text-sm font-semibold"
-          >
-            Re-run full pilot
-          </button>
-        )}
+        <button
+          type="button"
+          disabled={busy}
+          onClick={createCourt}
+          className="px-4 py-2.5 rounded-rs bg-violet/90 hover:bg-violet text-sm font-semibold"
+        >
+          New Social Correction Court
+        </button>
         <Link href="/dashboard" className="px-4 py-2.5 rounded-rs border border-white/10 text-sm text-white/60">
           Factory Mode
         </Link>
@@ -334,53 +437,112 @@ export default function CinemaPage() {
 
       {bible ? (
         <div className="grid lg:grid-cols-2 gap-4">
-          <section className="rounded-rs border border-white/10 p-4 space-y-3">
-            <h2 className="display text-lg">{bible.title}</h2>
-            <p className="text-sm text-white/65">{bible.logline}</p>
-            <p className="mono text-[10px] text-orange">SPINE · {bible.spine}</p>
-
-            <div className="flex flex-wrap gap-2 pt-2">
-              {[
-                { label: "1 · Lock Cast", fn: () => lock("cast"), accent: false },
-                { label: "2 · Lock World", fn: () => lock("world"), accent: false },
-                { label: "3 · Lock Voice", fn: () => lock("voice"), accent: false },
-                { label: "4 · Approve Board", fn: approveAll, accent: false },
-                { label: "5 · Shoot", fn: shoot, accent: true },
-                { label: "6 · Cut master", fn: cut, accent: true },
-              ].map((b) => (
-                <button
-                  key={b.label}
-                  type="button"
-                  disabled={busy}
-                  onClick={b.fn}
-                  className={clsx(
-                    "px-3 py-1.5 rounded-[10px] border text-xs disabled:opacity-50",
-                    b.accent
-                      ? "border-cyan/35 text-cyan bg-cyan/10"
-                      : "border-white/12 bg-white/[0.04]",
-                  )}
-                >
-                  {b.label}
-                </button>
-              ))}
+          <section className="rounded-rs border border-white/10 p-4 space-y-4">
+            <div>
+              <h2 className="display text-lg">{bible.title}</h2>
+              <p className="text-sm text-white/65 mt-1">{bible.logline}</p>
+              <p className="mono text-[10px] text-orange mt-2">SPINE · {bible.spine}</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 pt-2">
-              {bible.characters.map((c) => (
-                <div key={c.id} className="rounded-lg border border-white/10 overflow-hidden">
-                  {c.faceUrl ? (
+            <div className="space-y-2 border-t border-white/10 pt-3">
+              <div className="mono text-[10px] text-cyan">CAST · JUDGE GEORGE</div>
+              <label className="block text-xs text-white/50">
+                Primary portrait (Image 7)
+                <input
+                  type="file"
+                  accept="image/*"
+                  disabled={busy}
+                  className="mt-1 block w-full text-xs"
+                  onChange={(e) => onJudgeUpload(e.target.files?.[0] || null, "face")}
+                />
+              </label>
+              {judgeFaceUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={judgeFaceUrl} alt="Judge" className="w-28 h-40 object-cover rounded-lg" />
+              ) : null}
+              <label className="block text-xs text-white/50">
+                Entrance / wardrobe angle (optional)
+                <input
+                  type="file"
+                  accept="image/*"
+                  disabled={busy}
+                  className="mt-1 block w-full text-xs"
+                  onChange={(e) => onJudgeUpload(e.target.files?.[0] || null, "entrance")}
+                />
+              </label>
+              <button
+                type="button"
+                disabled={busy || !judgeFaceUrl}
+                onClick={lockCast}
+                className="px-3 py-1.5 rounded-[10px] border border-white/12 bg-white/[0.04] text-xs disabled:opacity-40"
+              >
+                1 · Lock Cast
+              </button>
+            </div>
+
+            <div className="space-y-2 border-t border-white/10 pt-3">
+              <div className="mono text-[10px] text-cyan">WORLD · COURT PLATES</div>
+              {plateKeys.map((key) => (
+                <div key={key} className="flex items-center gap-3">
+                  <label className="flex-1 text-xs text-white/50">
+                    {WORLD_PLATE_LABELS[key] || key}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      disabled={busy}
+                      className="mt-1 block w-full text-xs"
+                      onChange={(e) => onWorldUpload(e.target.files?.[0] || null, key)}
+                    />
+                  </label>
+                  {worldPlates[key] ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={c.faceUrl} alt={c.name} className="w-full h-36 object-cover" />
-                  ) : (
-                    <div className="h-36 bg-white/5" />
-                  )}
-                  <div className="p-2 text-xs">
-                    <div className="font-semibold">{c.name}</div>
-                    <div className="text-white/45">{c.role}</div>
-                    <div className={c.locked ? "text-cyan" : "text-orange"}>{c.locked ? "LOCKED" : "OPEN"}</div>
-                  </div>
+                    <img src={worldPlates[key]} alt={key} className="w-14 h-20 object-cover rounded" />
+                  ) : null}
                 </div>
               ))}
+              <button
+                type="button"
+                disabled={busy}
+                onClick={lockWorld}
+                className="px-3 py-1.5 rounded-[10px] border border-white/12 bg-white/[0.04] text-xs"
+              >
+                2 · Lock World
+              </button>
+            </div>
+
+            <div className="flex flex-wrap gap-2 border-t border-white/10 pt-3">
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => lock("voice")}
+                className="px-3 py-1.5 rounded-[10px] border border-white/12 text-xs"
+              >
+                3 · Lock Voice
+              </button>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={approveAll}
+                className="px-3 py-1.5 rounded-[10px] border border-white/12 text-xs"
+              >
+                4 · Approve Board
+              </button>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={shoot}
+                className="px-3 py-1.5 rounded-[10px] border border-cyan/35 text-cyan text-xs"
+              >
+                5 · Shoot
+              </button>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={cut}
+                className="px-3 py-1.5 rounded-[10px] border border-cyan/35 text-cyan text-xs"
+              >
+                6 · Cut
+              </button>
             </div>
           </section>
 
@@ -388,7 +550,6 @@ export default function CinemaPage() {
             <h3 className="display text-base">Ep1 · {ep?.title}</h3>
             <p className="text-sm text-white/60">{ep?.synopsis}</p>
             <p className="text-xs text-orange/90">Cliffhanger: {ep?.cliffhanger}</p>
-
             <div className="space-y-2 max-h-[420px] overflow-y-auto">
               {ep?.stills.map((s) => {
                 const clip = ep.clips.find((c) => c.stillId === s.id);
@@ -401,7 +562,7 @@ export default function CinemaPage() {
                       <div className="w-16 h-28 bg-white/5 rounded" />
                     )}
                     <div className="flex-1 text-xs space-y-1">
-                      <div className="font-medium">{s.dialogue || s.prompt.slice(0, 80)}</div>
+                      <div className="font-medium">{s.dialogue || s.prompt.slice(0, 90)}</div>
                       <div className="text-white/40">
                         {s.framing} · {s.durationSec}s · {s.approved ? "approved" : "pending"}
                       </div>
@@ -409,7 +570,6 @@ export default function CinemaPage() {
                         <div className="text-cyan/80">
                           {clip.status}
                           {clip.engine ? ` · ${clip.engine}` : ""}
-                          {clip.error ? ` · ${clip.error}` : ""}
                         </div>
                       ) : null}
                     </div>
@@ -417,13 +577,12 @@ export default function CinemaPage() {
                 );
               })}
             </div>
-
             {masterUrl ? (
               <div className="pt-2 space-y-2">
                 <div className="mono text-[10px] text-cyan">MASTER</div>
                 <video src={masterUrl} controls className="w-full max-h-96 rounded-lg bg-black" />
                 <a href={masterUrl} target="_blank" rel="noreferrer" className="text-sm text-cyan underline">
-                  Open master URL
+                  Open master
                 </a>
               </div>
             ) : null}
@@ -431,7 +590,8 @@ export default function CinemaPage() {
         </div>
       ) : (
         <div className="rounded-rs border border-dashed border-white/15 p-10 text-center text-white/50">
-          Create a revenge drama season or ship the auto pilot to produce Episode 1.
+          Create <strong className="text-white/80">Social Correction Court</strong>, then upload Judge George
+          portrait + court plates.
         </div>
       )}
 

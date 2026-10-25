@@ -3,7 +3,7 @@
  * Cast · World · Voice · Board (approve gate) · Shoot · Cut
  */
 import type { FastifyInstance, FastifyRequest } from "fastify";
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { spawn } from "node:child_process";
 import { mkdir, writeFile, readFile } from "node:fs/promises";
 import path from "node:path";
@@ -11,6 +11,7 @@ import { tmpdir } from "node:os";
 import { prisma } from "@reelstorm/db";
 import {
   buildPilotSeason,
+  buildSocialCorrectionCourtSeason,
   cinemaProgress,
   assertBoardApproved,
   continuityReport,
@@ -356,7 +357,43 @@ export async function cinemaRoutes(app: FastifyInstance) {
     },
     seedance: Boolean(process.env.SEEDANCE_API_KEY || process.env.DASHSCOPE_API_KEY),
     note: "Cinema Mode — Saga hybrid. BOT Director absorbed as Showrunner.",
+    templates: [{ id: "social_correction_court", label: "Social Correction Court · Judge George" }],
   }));
+
+  /** Multipart image → R2 (or local media) for Cast / World locks */
+  app.post("/api/cinema/assets/upload", async (req, reply) => {
+    const user = await resolveUser(req);
+    const file = await req.file();
+    if (!file) return reply.code(400).send({ error: "image file required (field: image)" });
+    const fields = file.fields as Record<string, { value?: string } | undefined>;
+    const kind = String(fields?.kind && "value" in fields.kind ? fields.kind.value : "still").trim();
+    const label = String(fields?.label && "value" in fields.label ? fields.label.value : "asset")
+      .trim()
+      .replace(/[^a-zA-Z0-9_-]+/g, "_")
+      .slice(0, 48);
+    const buf = await file.toBuffer();
+    if (!buf.length) return reply.code(400).send({ error: "empty file" });
+
+    const fname = (file.filename || "upload.jpg").toLowerCase();
+    const isPng = fname.endsWith(".png") || (file.mimetype || "").includes("png");
+    const isWebp = fname.endsWith(".webp") || (file.mimetype || "").includes("webp");
+    const ext = isPng ? "png" : isWebp ? "webp" : "jpg";
+    const contentType = isPng ? "image/png" : isWebp ? "image/webp" : "image/jpeg";
+    const key = `cinema/${user.id}/assets/${kind}_${label}_${randomUUID().slice(0, 8)}.${ext}`;
+
+    let url: string;
+    try {
+      await uploadBuffer(key, buf, contentType);
+      url = publicUrl(key);
+    } catch {
+      const dir = path.join(process.cwd(), "tmp", "cinema");
+      await mkdir(dir, { recursive: true });
+      const local = path.join(dir, path.basename(key));
+      await writeFile(local, buf);
+      url = `http://127.0.0.1:${process.env.PORT || 4000}/media/cinema/${path.basename(local)}`;
+    }
+    return { url, key, kind, label, bytes: buf.length, contentType };
+  });
 
   app.get("/api/cinema/readiness", async () => {
     const ffmpeg = await resolveFfmpeg();
@@ -433,13 +470,17 @@ export async function cinemaRoutes(app: FastifyInstance) {
       title?: string;
       logline?: string;
       ownerEmail?: string;
+      template?: string;
     };
     const user = await resolveUser(req, body.ownerEmail);
-    const bible = buildPilotSeason({
-      spineId: body.spineId,
-      title: body.title,
-      logline: body.logline,
-    });
+    const bible =
+      body.template === "social_correction_court" || body.spineId === "social_correction_court"
+        ? buildSocialCorrectionCourtSeason({ title: body.title, logline: body.logline })
+        : buildPilotSeason({
+            spineId: body.spineId,
+            title: body.title,
+            logline: body.logline,
+          });
 
     const project = await prisma.project.create({
       data: {
@@ -470,11 +511,18 @@ export async function cinemaRoutes(app: FastifyInstance) {
     });
   });
 
-  /** Lock Cast — assign faces (Avatar Studio path) */
+  /** Lock Cast — assign faces (Avatar Studio path / custom uploads) */
   app.post("/api/cinema/seasons/:id/cast/lock", async (req, reply) => {
     const { id } = req.params as { id: string };
     const body = (req.body || {}) as {
-      characters?: Array<{ id: string; faceUrl?: string; avatarId?: string; name?: string }>;
+      characters?: Array<{
+        id: string;
+        faceUrl?: string;
+        avatarId?: string;
+        name?: string;
+        angleUrls?: { front?: string; threeQuarter?: string; entrance?: string };
+        wardrobeDay0?: string;
+      }>;
     };
     const season = await prisma.cinemaSeason.findUnique({ where: { id } });
     if (!season) return reply.code(404).send({ error: "not found" });
@@ -482,9 +530,19 @@ export async function cinemaRoutes(app: FastifyInstance) {
 
     for (const c of bible.characters) {
       const override = body.characters?.find((x) => x.id === c.id);
-      c.faceUrl = override?.faceUrl || c.faceUrl || CAST_FACE_PRESETS[c.id];
+      c.faceUrl =
+        override?.faceUrl ||
+        override?.angleUrls?.front ||
+        c.faceUrl ||
+        CAST_FACE_PRESETS[c.id];
       if (override?.avatarId) c.avatarId = override.avatarId;
       if (override?.name) c.name = override.name;
+      if (override?.wardrobeDay0) c.wardrobeDay0 = override.wardrobeDay0;
+      if (override?.angleUrls) {
+        c.angleUrls = { ...(c.angleUrls || {}), ...override.angleUrls };
+        if (!c.faceUrl && override.angleUrls.front) c.faceUrl = override.angleUrls.front;
+      }
+      // Judge George / custom leads must not fall back to Unsplash if face provided
       c.locked = Boolean(c.faceUrl);
     }
 
@@ -530,15 +588,23 @@ export async function cinemaRoutes(app: FastifyInstance) {
     };
   });
 
-  /** Lock World — Scene Studio plates */
+  /** Lock World — Scene Studio plates (optional plateUrl overrides by id or plateKey) */
   app.post("/api/cinema/seasons/:id/world/lock", async (req, reply) => {
     const { id } = req.params as { id: string };
+    const body = (req.body || {}) as {
+      worlds?: Array<{ id?: string; plateKey?: string; plateUrl?: string; name?: string }>;
+    };
     const season = await prisma.cinemaSeason.findUnique({ where: { id } });
     if (!season) return reply.code(404).send({ error: "not found" });
     const bible = asBible(season.bibleJson);
     const userId = season.userId;
 
     for (const w of bible.worlds) {
+      const override = body.worlds?.find(
+        (x) => x.id === w.id || (x.plateKey && x.plateKey === w.plateKey),
+      );
+      if (override?.plateUrl) w.plateUrl = override.plateUrl;
+      if (override?.name) w.name = override.name;
       if (!w.plateUrl) {
         const svg = stillSvg(
           {
