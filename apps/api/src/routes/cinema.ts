@@ -395,6 +395,64 @@ export async function cinemaRoutes(app: FastifyInstance) {
     return { url, key, kind, label, bytes: buf.length, contentType };
   });
 
+  /** Multipart video → R2 — Meta AI / Camera Angles motion for cold-open cuts */
+  app.post("/api/cinema/assets/upload-video", async (req, reply) => {
+    const user = await resolveUser(req);
+    const file = await req.file();
+    if (!file) return reply.code(400).send({ error: "video file required (field: video)" });
+    const fields = file.fields as Record<string, { value?: string } | undefined>;
+    const label = String(fields?.label && "value" in fields.label ? fields.label.value : "clip")
+      .trim()
+      .replace(/[^a-zA-Z0-9_-]+/g, "_")
+      .slice(0, 48);
+    const buf = await file.toBuffer();
+    if (!buf.length) return reply.code(400).send({ error: "empty file" });
+    const key = `cinema/${user.id}/motion/${label}_${randomUUID().slice(0, 8)}.mp4`;
+    await uploadBuffer(key, buf, "video/mp4");
+    return { url: publicUrl(key), key, label, bytes: buf.length };
+  });
+
+  /**
+   * Attach real motion clips to storyboard stills (Meta AI / Seedance / Camera Angles).
+   * Skips Ken Burns — use Cut after attach to build master.
+   */
+  app.post("/api/cinema/seasons/:id/clips/attach", async (req, reply) => {
+    const { id } = req.params as { id: string };
+    const body = (req.body || {}) as {
+      clips?: Array<{ stillId: string; videoUrl: string; engine?: string }>;
+    };
+    if (!body.clips?.length) return reply.code(400).send({ error: "clips[] required" });
+    const season = await prisma.cinemaSeason.findUnique({ where: { id } });
+    if (!season) return reply.code(404).send({ error: "not found" });
+    const bible = asBible(season.bibleJson);
+    const ep = bible.episodes[0];
+    if (!ep) return reply.code(400).send({ error: "no episode" });
+
+    for (const item of body.clips) {
+      const still = ep.stills.find((s) => s.id === item.stillId);
+      if (!still) continue;
+      let clip = ep.clips.find((c) => c.stillId === item.stillId);
+      if (!clip) {
+        clip = { stillId: item.stillId, status: "pending" };
+        ep.clips.push(clip);
+      }
+      clip.videoUrl = item.videoUrl;
+      clip.engine = item.engine || "imported";
+      clip.status = "ready";
+      clip.error = undefined;
+      clip.qc = { pass: true, notes: "imported motion clip" };
+    }
+    ep.status = "cut";
+    const updated = await saveBible(id, bible, { status: "shooting" });
+    return {
+      season: updated,
+      bible,
+      progress: cinemaProgress(bible),
+      continuity: continuityReport(bible),
+      attached: body.clips.length,
+    };
+  });
+
   app.get("/api/cinema/readiness", async () => {
     const ffmpeg = await resolveFfmpeg();
     const ffmpegOk = ffmpeg !== "ffmpeg";
@@ -793,6 +851,8 @@ export async function cinemaRoutes(app: FastifyInstance) {
       quick?: boolean;
       engine?: "auto" | "heygen" | "seedance" | "kenburns";
       skipRtc?: boolean;
+      /** Keep Meta AI / imported clips; only generate missing shots */
+      preserveImports?: boolean;
     };
     const season = await prisma.cinemaSeason.findUnique({ where: { id } });
     if (!season) return reply.code(404).send({ error: "not found" });
@@ -849,9 +909,15 @@ export async function cinemaRoutes(app: FastifyInstance) {
     ep.status = "shooting";
     await saveBible(id, bible, { status: "shooting" });
 
+    const hasSeedance = Boolean(process.env.SEEDANCE_API_KEY || process.env.DASHSCOPE_API_KEY);
+    // Prefer Seedance I2V for real motion; Ken Burns only when no video model key
     const enginePref =
       body.engine ||
-      (heygenCircuitOpen || process.env.CINEMA_SKIP_HEYGEN === "1" ? "kenburns" : "auto");
+      (hasSeedance
+        ? "seedance"
+        : heygenCircuitOpen || process.env.CINEMA_SKIP_HEYGEN === "1"
+          ? "kenburns"
+          : "auto");
     const work = path.join(tmpdir(), `cinema-shoot-${id}-${Date.now()}`);
     await mkdir(work, { recursive: true });
 
@@ -862,6 +928,14 @@ export async function cinemaRoutes(app: FastifyInstance) {
         status: "pending" as const,
       };
       if (!ep.clips.find((c) => c.stillId === still.id)) ep.clips.push(clip);
+      if (
+        body.preserveImports &&
+        clip.status === "ready" &&
+        clip.videoUrl &&
+        (clip.engine === "meta-ai" || clip.engine === "imported")
+      ) {
+        continue;
+      }
       clip.status = "rendering";
 
       try {

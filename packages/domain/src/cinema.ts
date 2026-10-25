@@ -211,10 +211,10 @@ export function buildSocialCorrectionCourtSeason(opts?: {
       characterId: "char_judge_george",
       worldId: "world_entrance_hall",
       prompt:
-        "Vertical cinematic: Judge George walking red-carpet entrance hall toward open court doors, burgundy Kente robes, cowrie crown, god rays, photoreal 9:16",
+        "I2V cinematic vertical 9:16: Judge George walks forward on red carpet through grand Afro-Baroque hallway, double doors with gold lions open ahead, camera dolly-in following her, burgundy Kente robes flowing, cowrie crown, volumetric god rays, photoreal continuous motion",
       dialogue: undefined,
       framing: "wide",
-      durationSec: 6,
+      durationSec: 8,
       approved: false,
     },
     {
@@ -223,9 +223,9 @@ export function buildSocialCorrectionCourtSeason(opts?: {
       shotIndex: 2,
       worldId: "world_court_wide",
       prompt:
-        "Vertical cinematic: full Social Correction Court standing assembly awaiting the Judge, checkered marble, chandelier, African masks, photoreal 9:16",
+        "I2V cinematic vertical 9:16: Social Correction Court wide — jury and gallery rise to their feet as the Judge enters, Kente wraps, checkered marble floor, crystal chandelier, African masks on walls, respectful stand-up motion, photoreal",
       framing: "wide",
-      durationSec: 5,
+      durationSec: 6,
       approved: false,
     },
     {
@@ -235,7 +235,7 @@ export function buildSocialCorrectionCourtSeason(opts?: {
       characterId: "char_judge_george",
       worldId: "world_bench",
       prompt:
-        "Vertical cinematic: Judge George seated at burgundy gold bench, cowrie gavel on marble, stern educational presence, photoreal 9:16",
+        "I2V cinematic vertical 9:16: Judge George sits down into burgundy gold throne bench, robes settle, hands place on marble desk near cowrie gavel, stern educational presence, continuous sit-down motion, photoreal",
       dialogue: "Court is in session. Today's social case will teach us all.",
       framing: "medium",
       durationSec: 7,
@@ -245,11 +245,12 @@ export function buildSocialCorrectionCourtSeason(opts?: {
       id: "ep1_s04",
       episodeIndex: 1,
       shotIndex: 4,
+      characterId: "char_judge_george",
       worldId: "world_bench",
       prompt:
-        "Vertical cinematic insert: cowrie-shell gold gavel striking marble block, cliffhanger cut, Social Correction Court, photoreal 9:16",
+        "I2V cinematic vertical 9:16 close: Judge George's hand lifts ornate cowrie-shell gold gavel and strikes marble sound block once, decisive crack, Social Correction Court in session, photoreal motion",
       framing: "close",
-      durationSec: 4,
+      durationSec: 5,
       approved: false,
     },
   ];

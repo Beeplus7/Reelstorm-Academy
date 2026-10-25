@@ -310,26 +310,71 @@ export default function CinemaPage() {
     }
   }
 
-  async function shoot() {
+  async function shoot(engine: "seedance" | "kenburns" = "seedance") {
     if (!seasonId) return;
     setBusy(true);
-    setMsg("Shooting cold-open…");
+    setMsg(
+      engine === "seedance"
+        ? "Shooting real motion (Seedance I2V from locked stills)… may take several minutes"
+        : "Shooting Ken Burns fallback…",
+    );
     try {
       const data = await api<{
         bible: Bible;
         progress: Progress;
         continuity?: { pass: boolean; issues: string[] };
-        shotSummary?: { ready: number; total: number; qcPass?: number; rtcCharged?: number };
+        shotSummary?: {
+          ready: number;
+          total: number;
+          qcPass?: number;
+          rtcCharged?: number;
+          enginePref?: string;
+        };
       }>(`/api/cinema/seasons/${seasonId}/shoot`, {
         method: "POST",
-        body: JSON.stringify({ quick: false, engine: "kenburns" }),
+        body: JSON.stringify({ quick: false, engine }),
       });
       setBible(data.bible);
       setProgress(data.progress);
       setContinuity(data.continuity || null);
       setMsg(
-        `Shoot · ${data.shotSummary?.ready}/${data.shotSummary?.total} · QC ${data.shotSummary?.qcPass ?? "—"}`,
+        `Shoot · ${data.shotSummary?.ready}/${data.shotSummary?.total} · engine ${data.shotSummary?.enginePref || engine} · QC ${data.shotSummary?.qcPass ?? "—"}`,
       );
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function attachMetaClip(stillId: string, file: File | null) {
+    if (!seasonId || !file) return;
+    setBusy(true);
+    setMsg(`Uploading motion for ${stillId}…`);
+    try {
+      const fd = new FormData();
+      fd.append("video", file);
+      fd.append("label", stillId);
+      const token = typeof window !== "undefined" ? localStorage.getItem("rs_access_token") : null;
+      const up = await fetch(`${getApiBase()}/api/cinema/assets/upload-video`, {
+        method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: fd,
+      });
+      const uploaded = await up.json();
+      if (!up.ok) throw new Error(uploaded?.error || "video upload failed");
+      const data = await api<{ bible: Bible; progress: Progress }>(
+        `/api/cinema/seasons/${seasonId}/clips/attach`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            clips: [{ stillId, videoUrl: uploaded.url, engine: "meta-ai" }],
+          }),
+        },
+      );
+      setBible(data.bible);
+      setProgress(data.progress);
+      setMsg(`Attached Meta clip → ${stillId}. Cut when all shots ready.`);
     } catch (e) {
       setMsg(e instanceof Error ? e.message : String(e));
     } finally {
@@ -530,10 +575,18 @@ export default function CinemaPage() {
               <button
                 type="button"
                 disabled={busy}
-                onClick={shoot}
+                onClick={() => shoot("seedance")}
                 className="px-3 py-1.5 rounded-[10px] border border-cyan/35 text-cyan text-xs"
               >
-                5 · Shoot
+                5 · Shoot real motion (Seedance)
+              </button>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => shoot("kenburns")}
+                className="px-3 py-1.5 rounded-[10px] border border-white/12 text-xs text-white/50"
+              >
+                Shoot Ken Burns only
               </button>
               <button
                 type="button"
@@ -541,8 +594,27 @@ export default function CinemaPage() {
                 onClick={cut}
                 className="px-3 py-1.5 rounded-[10px] border border-cyan/35 text-cyan text-xs"
               >
-                6 · Cut
+                6 · Cut master
               </button>
+            </div>
+            <div className="space-y-2 border-t border-white/10 pt-3">
+              <div className="mono text-[10px] text-cyan">IMPORT META AI CLIPS (walk-in → stand → seat → gavel)</div>
+              <p className="text-[11px] text-white/45">
+                Attach your Meta MP4s to each beat, then Cut. Or leave empty and Seedance will animate locked
+                stills.
+              </p>
+              {(ep?.stills || []).map((s) => (
+                <label key={s.id} className="block text-xs text-white/50">
+                  {s.id} · {s.dialogue || s.prompt.slice(0, 48)}…
+                  <input
+                    type="file"
+                    accept="video/mp4,video/*"
+                    disabled={busy}
+                    className="mt-1 block w-full text-xs"
+                    onChange={(e) => attachMetaClip(s.id, e.target.files?.[0] || null)}
+                  />
+                </label>
+              ))}
             </div>
           </section>
 
